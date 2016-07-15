@@ -1,0 +1,28 @@
+{
+  "name": "prequelize",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "abbott": "^1.1.3",
+    "cyclic-deep-extend": "^1.0.2",
+    "flat-merge": "^1.0.0",
+    "generic-errors": "^2.0.2",
+    "object-tojson": "^1.0.1",
+    "righto": "^1.7.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/korynunn/prequelize.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/korynunn/prequelize/issues"
+  },
+  "homepage": "https://github.com/korynunn/prequelize#readme"
+}
