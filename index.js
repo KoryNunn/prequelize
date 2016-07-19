@@ -24,23 +24,13 @@ function extendSettings(settings, extendedSettings){
     If no results are found, the call will be rejected with an Error with code 404.
 */
 function get(id, settings, callback){
-    var prequelizeModel = this;
-
-    settings = extendSettings(settings, {
+    extendSettings(settings, {
         where: {
             id: id
         }
     });
 
-    var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    sequelizeSettings.transaction = settings.transaction;
-
-    var result = prequelizeModel.findOne(sequelizeSettings);
-
-    callback && result(callback);
-
-    return result;
+    return findOne.call(this, settings, callback);
 }
 
 /*
@@ -156,7 +146,7 @@ function findOne(settings, callback){
 
     Remove all results of a query.
 */
-function remove(settings, callback){
+function findAndRemove(settings, callback){
     var prequelizeModel = this;
 
     settings = extendSettings(settings);
@@ -185,7 +175,7 @@ function remove(settings, callback){
 
     If more than one result is found, the call will throw.
 */
-function removeOne(settings, callback){
+function findOneAndRemove(settings, callback){
     var prequelizeModel = this;
 
     settings = extendSettings(settings);
@@ -244,6 +234,25 @@ function removeOne(settings, callback){
     return result;
 }
 
+
+/*
+    ## Remove.
+
+    Remove exactly one result by ID.
+
+    If no results are found, the call will be rejected with an Error with code 404.
+*/
+
+function remove(id, settings, callback){
+    extendSettings(settings, {
+        where: {
+            id: id
+        }
+    });
+
+    return findOneAndRemove.call(this, settings, callback);
+}
+
 /*
     ## Create.
 
@@ -277,7 +286,7 @@ function create(data, settings, callback){
 
     Update all results of a query.
 */
-function update(data, settings, callback){
+function findAndUpdate(data, settings, callback){
     var prequelizeModel = this;
 
     settings = extendSettings(settings);
@@ -298,6 +307,91 @@ function update(data, settings, callback){
     callback && result(callback);
 
     return result;
+}
+
+/*
+    ## Update One.
+
+    Update exactly one result of a query.
+
+    If no results are found, the call will be rejected with an Error with code 404.
+
+    If more than one result is found, the call will throw.
+*/
+function findOneAndUpdate(data, settings, callback){
+    var prequelizeModel = this;
+
+    settings = extendSettings(settings);
+
+    var sequelizeSettings = parseSettings(settings, prequelizeModel),
+        removeTransaction = settings.transaction ?
+            null :
+            prequelizeModel.model.sequelize.transaction();
+
+    extend(sequelizeSettings, {
+        transaction: settings.transaction || updateTransaction
+    });
+
+    var sequelizeResult = prequelizeModel.model.update(sequelizeSettings);
+
+    function resolveResult(done){
+        var deleteResult = righto(format, sequelizeResult, prequelizeModel);
+
+        deleteResult(function(error, result){
+            if(error){
+                if(updateTransaction){
+                    return abbott(updateTransaction.rollback())(function(){
+                        done(error, result);
+                    });
+                }
+
+                return done(error);
+            }
+
+            if(result > 2){
+                throw new Error('Expected only 1 affected row, instead affected ' + result);
+            }
+
+            function checkOne(error, result){
+                if(error || result < 1){
+                    return done(error || new errors.NotFound());
+                }
+
+                done(null, result);
+            }
+
+            if(updateTransaction){
+                return abbott(updateTransaction.commit())(function(commitError){
+                    checkOne(commitError, result);
+                });
+            }
+
+            checkOne(null, result);
+        });
+    }
+
+    var result = righto(resolveResult);
+
+    callback && result(callback);
+
+    return result;
+}
+
+/*
+    ## Update.
+
+    Update exactly one result by ID.
+
+    If no results are found, the call will be rejected with an Error with code 404.
+*/
+function update(id, settings, callback){
+    extendSettings(settings, {
+        where: {
+            id: id
+        }
+    });
+
+    return findOneAndUpdate.call(this, settings, callback);
 }
 
 var defaultTransformProperty = {
@@ -328,9 +422,12 @@ function createModelMethods(model, modelName, settings) {
     prequelizeModel.findAndCountAll = findAndCountAll.bind(prequelizeModel);
     prequelizeModel.findOne = findOne.bind(prequelizeModel);
     prequelizeModel.remove = remove.bind(prequelizeModel);
-    prequelizeModel.removeOne = removeOne.bind(prequelizeModel);
+    prequelizeModel.findAndRemove = findAndRemove.bind(prequelizeModel);
+    prequelizeModel.findOneAndRemove = findOneAndRemove.bind(prequelizeModel);
     prequelizeModel.create = create.bind(prequelizeModel);
     prequelizeModel.update = update.bind(prequelizeModel);
+    prequelizeModel.findAndUpdate = findAndUpdate.bind(prequelizeModel);
+    prequelizeModel.findOneAndUpdate = findOneAndUpdate.bind(prequelizeModel);
 
     return prequelizeModel;
 }

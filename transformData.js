@@ -5,7 +5,7 @@ function getSubModel(property, model){
     }
 
     for(var key in model.associations){
-        if(model.associations[key].identifierField === property){
+        if((model.associations[key].as || model.associations[key].identifierField) === property){
             return model.associations[key];
         }
     }
