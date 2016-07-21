@@ -10,9 +10,11 @@ var parseSettings = require('./parseSettings'),
     resultOrError = require('./resultOrError');
 
 function extendSettings(settings, extendedSettings){
-    settings = merge({}, settings);
-    settings.where = extend({}, settings.where);
-    settings.include = extend({}, settings.include);
+    console.log('XXX', settings);
+    settings = merge({}, settings || {});
+    console.log('XXX', settings);
+    settings.where = extend(settings.where, extendedSettings.where || {});
+    settings.include = extend(settings.include, extendedSettings.include || {});
     return settings;
 }
 
@@ -24,7 +26,7 @@ function extendSettings(settings, extendedSettings){
     If no results are found, the call will be rejected with an Error with code 404.
 */
 function get(id, settings, callback){
-    extendSettings(settings, {
+    settings = extendSettings(settings, {
         where: {
             id: id
         }
@@ -185,9 +187,7 @@ function findOneAndRemove(settings, callback){
             null :
             prequelizeModel.model.sequelize.transaction();
 
-    extend(sequelizeSettings, {
-        transaction: settings.transaction || removeTransaction
-    });
+    sequelizeSettings.transaction = settings.transaction || removeTransaction;
 
     var sequelizeResult = prequelizeModel.model.remove(sequelizeSettings);
 
@@ -205,7 +205,7 @@ function findOneAndRemove(settings, callback){
                 return done(error);
             }
 
-            if(result > 2){
+            if(result > 1){
                 throw new Error('Expected only 1 affected row, instead affected ' + result);
             }
 
@@ -244,7 +244,7 @@ function findOneAndRemove(settings, callback){
 */
 
 function remove(id, settings, callback){
-    extendSettings(settings, {
+    settings = extendSettings(settings, {
         where: {
             id: id
         }
@@ -348,7 +348,7 @@ function findOneAndUpdate(data, settings, callback){
                 return done(error);
             }
 
-            if(result > 2){
+            if(result > 1){
                 throw new Error('Expected only 1 affected row, instead affected ' + result);
             }
 
@@ -385,7 +385,7 @@ function findOneAndUpdate(data, settings, callback){
     If no results are found, the call will be rejected with an Error with code 404.
 */
 function update(id, settings, callback){
-    extendSettings(settings, {
+    settings = extendSettings(settings, {
         where: {
             id: id
         }

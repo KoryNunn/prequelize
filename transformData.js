@@ -1,15 +1,4 @@
-
-function getSubModel(property, model){
-    if(!model){
-        return;
-    }
-
-    for(var key in model.associations){
-        if((model.associations[key].as || model.associations[key].identifierField) === property){
-            return model.associations[key];
-        }
-    }
-}
+var getSubModel = require('./getSubModel');
 
 function transformObject(object, propertyName, model, settings, transformPropertyFn){
     var result = Array.isArray(object) ? [] : {};
