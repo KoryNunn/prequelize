@@ -35,8 +35,6 @@ function buildQuery(settings, where, include, model, alias){
 
         if(include && !subModel && (include === true || include[key])){
             result.attributes.push(key);
-        }else if(key === ID) {
-            result.attributes.unshift(key);
         }
 
         if(subModel){
@@ -57,6 +55,9 @@ function buildQuery(settings, where, include, model, alias){
     var includeKeys = Object.keys(includeResult);
 
     if (includeKeys.length) {
+
+        result.attributes.push(ID);
+
         result.include = includeKeys.map(function(key){
             return includeResult[key];
         });

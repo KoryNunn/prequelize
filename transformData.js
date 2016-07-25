@@ -12,7 +12,7 @@ function transformObject(object, propertyName, model, settings, transformPropert
 }
 
 function transform(data, propertyName, model, subModel, settings, transformPropertyFn){
-    if(typeof data === 'object'){
+    if(data && typeof data === 'object'){
         return transformObject(data, propertyName, subModel, settings, transformPropertyFn);
     }
 

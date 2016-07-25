@@ -10,9 +10,8 @@ var parseSettings = require('./parseSettings'),
     resultOrError = require('./resultOrError');
 
 function extendSettings(settings, extendedSettings){
-    console.log('XXX', settings);
     settings = merge({}, settings || {});
-    console.log('XXX', settings);
+    extendedSettings = extendedSettings || {};
     settings.where = extend(settings.where, extendedSettings.where || {});
     settings.include = extend(settings.include, extendedSettings.include || {});
     return settings;
@@ -195,35 +194,37 @@ function findOneAndRemove(settings, callback){
         var deleteResult = righto(format, sequelizeResult, prequelizeModel);
 
         deleteResult(function(error, result){
+            var affected = result[0];
+
             if(error){
                 if(removeTransaction){
                     return abbott(removeTransaction.rollback())(function(){
-                        done(error, result);
+                        done(error, affected);
                     });
                 }
 
                 return done(error);
             }
 
-            if(result > 1){
-                throw new Error('Expected only 1 affected row, instead affected ' + result);
+            if(affected > 1){
+                throw new Error('Expected only 1 affected row, instead affected ' + affected);
             }
 
-            function checkOne(error, result){
-                if(error || result < 1){
+            function checkOne(error, affected){
+                if(error || affected < 1){
                     return done(error || new errors.NotFound());
                 }
 
-                done(null, result);
+                done(null, affected);
             }
 
             if(removeTransaction){
                 return abbott(removeTransaction.commit())(function(commitError){
-                    checkOne(commitError, result);
+                    checkOne(commitError, affected);
                 });
             }
 
-            checkOne(null, result);
+            checkOne(null, affected);
         });
     }
 
@@ -324,7 +325,7 @@ function findOneAndUpdate(data, settings, callback){
     settings = extendSettings(settings);
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel),
-        removeTransaction = settings.transaction ?
+        updateTransaction = settings.transaction ?
             null :
             prequelizeModel.model.sequelize.transaction();
 
@@ -332,41 +333,46 @@ function findOneAndUpdate(data, settings, callback){
         transaction: settings.transaction || updateTransaction
     });
 
-    var sequelizeResult = prequelizeModel.model.update(sequelizeSettings);
+    var sequelizeResult = prequelizeModel.model.update(
+            transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
+            sequelizeSettings
+        );
 
     function resolveResult(done){
-        var deleteResult = righto(format, sequelizeResult, prequelizeModel);
+        var updateResult = righto(format, sequelizeResult, prequelizeModel);
 
-        deleteResult(function(error, result){
+        updateResult(function(error, result){
+            var affected = result[0];
+
             if(error){
                 if(updateTransaction){
                     return abbott(updateTransaction.rollback())(function(){
-                        done(error, result);
+                        done(error, affected);
                     });
                 }
 
                 return done(error);
             }
 
-            if(result > 1){
-                throw new Error('Expected only 1 affected row, instead affected ' + result);
+            if(affected > 1){
+                throw new Error('Expected only 1 affected row, instead affected ' + affected);
             }
 
-            function checkOne(error, result){
-                if(error || result < 1){
+            function checkOne(error, affected){
+                if(error || affected < 1){
                     return done(error || new errors.NotFound());
                 }
 
-                done(null, result);
+                done(null, affected);
             }
 
             if(updateTransaction){
                 return abbott(updateTransaction.commit())(function(commitError){
-                    checkOne(commitError, result);
+                    checkOne(commitError, affected);
                 });
             }
 
-            checkOne(null, result);
+            checkOne(null, affected);
         });
     }
 
@@ -384,14 +390,14 @@ function findOneAndUpdate(data, settings, callback){
 
     If no results are found, the call will be rejected with an Error with code 404.
 */
-function update(id, settings, callback){
+function update(id, data, settings, callback){
     settings = extendSettings(settings, {
         where: {
             id: id
         }
     });
 
-    return findOneAndUpdate.call(this, settings, callback);
+    return findOneAndUpdate.call(this, data, settings, callback);
 }
 
 var defaultTransformProperty = {
