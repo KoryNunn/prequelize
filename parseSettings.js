@@ -1,4 +1,5 @@
 var ID = 'id';
+var getSubModel = require('./getSubModel');
 
 function uniqueKeys(objects){
     return Object.keys(objects.reduce(function(result, object){
@@ -13,7 +14,6 @@ function buildQuery(settings, where, include, model, alias){
     var result = {
             where: {},
             attributes: [],
-            include: {},
             model: model,
             required: false
         },
@@ -23,8 +23,10 @@ function buildQuery(settings, where, include, model, alias){
         result.as = alias;
     }
 
+    var includeResult = {};
+
     keys.forEach(function(key){
-        var subModel = model.associations && model.associations[key] && model.associations[key].target;
+        var subModel = getSubModel(key, model);
 
         if(typeof where === 'object' && key in where && !subModel){
             result.where[key] = settings.transformProperty.to(where[key], model, key);
@@ -35,38 +37,52 @@ function buildQuery(settings, where, include, model, alias){
             result.attributes.push(key);
         }
 
-        if(key === ID && !~result.attributes.indexOf(ID)) {
-            result.attributes.push(key);
-        }
-
         if(subModel){
             // another check here could be model.associations[key].isSelfAssociation however the as is a generic thingy that isnt limited to selfassociations
-            var alias = model.associations[key].isAliased ? model.associations[key].as : false;
+            var alias = subModel.isAliased ? subModel.as : false;
+            result.required = true;
 
-            result.include[key] = buildQuery(
+            includeResult[key] = buildQuery(
                 settings,
                 where && where[key],
                 include && include[key],
-                subModel,
+                subModel.target,
                 alias
             );
         }
     });
 
-    result.include = Object.keys(result.include).map(function(key){
-        return result.include[key];
-    });
+    var includeKeys = Object.keys(includeResult);
+
+    if (includeKeys.length) {
+
+        result.attributes.push(ID);
+
+        result.include = includeKeys.map(function(key){
+            return includeResult[key];
+        });
+    }
 
     return result;
 }
 
 function parseSettings(settings, prequelizeModel){
-    return buildQuery(
+    var sequelizeSettings = buildQuery(
         prequelizeModel.settings,
         settings.where,
         settings.include,
         prequelizeModel.model
     );
+
+    for(var key in settings){
+        if(key === 'where' || key === 'include'){
+            continue;
+        }
+
+        sequelizeSettings[key] = settings[key];
+    }
+
+    return sequelizeSettings;
 }
 
 module.exports = parseSettings;

@@ -10,9 +10,10 @@ var parseSettings = require('./parseSettings'),
     resultOrError = require('./resultOrError');
 
 function extendSettings(settings, extendedSettings){
-    settings = merge({}, settings);
-    settings.where = extend({}, settings.where);
-    settings.include = extend({}, settings.include);
+    settings = merge({}, settings || {});
+    extendedSettings = extendedSettings || {};
+    settings.where = extend(settings.where, extendedSettings.where || {});
+    settings.include = extend(settings.include, extendedSettings.include || {});
     return settings;
 }
 
@@ -24,23 +25,13 @@ function extendSettings(settings, extendedSettings){
     If no results are found, the call will be rejected with an Error with code 404.
 */
 function get(id, settings, callback){
-    var prequelizeModel = this;
-
     settings = extendSettings(settings, {
         where: {
             id: id
         }
     });
 
-    var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    sequelizeSettings.transaction = settings.transaction;
-
-    var result = prequelizeModel.findOne(sequelizeSettings);
-
-    callback && result(callback);
-
-    return result;
+    return findOne.call(this, settings, callback);
 }
 
 /*
@@ -53,14 +44,12 @@ function get(id, settings, callback){
 function find(settings, callback){
     var prequelizeModel = this;
 
-    settings = extendSettings(settings);
-
-    var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
+    settings = extendSettings(settings, {
         limit: 1,
         transaction: settings.transaction
     });
+
+    var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
     var sequelizeResult = prequelizeModel.model.find(sequelizeSettings);
 
@@ -83,10 +72,6 @@ function findAll(settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    extend(sequelizeSettings, {
-        transaction: settings.transaction
-    });
-
     var sequelizeResult = prequelizeModel.model.findAll(sequelizeSettings);
 
     var result = righto(format, sequelizeResult, prequelizeModel);
@@ -107,10 +92,6 @@ function findAndCountAll(settings, callback){
     settings = extendSettings(settings);
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
-        transaction: settings.transaction
-    });
 
     var sequelizeResult = prequelizeModel.model.findAndCountAll(sequelizeSettings);
 
@@ -133,14 +114,11 @@ function findAndCountAll(settings, callback){
 function findOne(settings, callback){
     var prequelizeModel = this;
 
-    settings = extendSettings(settings);
+    settings = extendSettings(settings, {
+        limit: 2
+    });
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
-        limit: 2,
-        transaction: settings.transaction
-    });
 
     var sequelizeResult = prequelizeModel.model.findAll(sequelizeSettings);
 
@@ -156,16 +134,12 @@ function findOne(settings, callback){
 
     Remove all results of a query.
 */
-function remove(settings, callback){
+function findAndRemove(settings, callback){
     var prequelizeModel = this;
 
     settings = extendSettings(settings);
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
-        transaction: settings.transaction
-    });
 
     var sequelizeResult = prequelizeModel.model.remove(sequelizeSettings);
 
@@ -185,7 +159,7 @@ function remove(settings, callback){
 
     If more than one result is found, the call will throw.
 */
-function removeOne(settings, callback){
+function findOneAndRemove(settings, callback){
     var prequelizeModel = this;
 
     settings = extendSettings(settings);
@@ -195,53 +169,72 @@ function removeOne(settings, callback){
             null :
             prequelizeModel.model.sequelize.transaction();
 
-    extend(sequelizeSettings, {
-        transaction: settings.transaction || removeTransaction
-    });
+    function resolveResult(removeTransaction, done){
+        sequelizeSettings.transaction = settings.transaction || removeTransaction;
 
-    var sequelizeResult = prequelizeModel.model.remove(sequelizeSettings);
+        var sequelizeResult = prequelizeModel.model.remove(sequelizeSettings);
 
-    function resolveResult(done){
         var deleteResult = righto(format, sequelizeResult, prequelizeModel);
 
         deleteResult(function(error, result){
             if(error){
                 if(removeTransaction){
                     return abbott(removeTransaction.rollback())(function(){
-                        done(error, result);
+                        done(error, affected);
                     });
                 }
 
                 return done(error);
             }
 
-            if(result > 2){
-                throw new Error('Expected only 1 affected row, instead affected ' + result);
+            var affected = result[0];
+
+            if(affected > 1){
+                throw new Error('Expected only 1 affected row, instead affected ' + affected);
             }
 
-            function checkOne(error, result){
-                if(error || result < 1){
+            function checkOne(error, affected){
+                if(error || affected < 1){
                     return done(error || new errors.NotFound());
                 }
 
-                done(null, result);
+                done(null, affected);
             }
 
             if(removeTransaction){
                 return abbott(removeTransaction.commit())(function(commitError){
-                    checkOne(commitError, result);
+                    checkOne(commitError, affected);
                 });
             }
 
-            checkOne(null, result);
+            checkOne(null, affected);
         });
     }
 
-    var result = righto(resolveResult);
+    var result = righto(resolveResult, removeTransaction);
 
     callback && result(callback);
 
     return result;
+}
+
+
+/*
+    ## Remove.
+
+    Remove exactly one result by ID.
+
+    If no results are found, the call will be rejected with an Error with code 404.
+*/
+
+function remove(id, settings, callback){
+    settings = extendSettings(settings, {
+        where: {
+            id: id
+        }
+    });
+
+    return findOneAndRemove.call(this, settings, callback);
 }
 
 /*
@@ -255,10 +248,6 @@ function create(data, settings, callback){
     settings = extendSettings(settings);
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
-        transaction: settings.transaction
-    });
 
     var sequelizeResult = prequelizeModel.model.create(
             transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
@@ -277,16 +266,12 @@ function create(data, settings, callback){
 
     Update all results of a query.
 */
-function update(data, settings, callback){
+function findAndUpdate(data, settings, callback){
     var prequelizeModel = this;
 
     settings = extendSettings(settings);
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
-        transaction: settings.transaction
-    });
 
     var sequelizeResult = prequelizeModel.model.update(
             transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
@@ -298,6 +283,94 @@ function update(data, settings, callback){
     callback && result(callback);
 
     return result;
+}
+
+/*
+    ## Update One.
+
+    Update exactly one result of a query.
+
+    If no results are found, the call will be rejected with an Error with code 404.
+
+    If more than one result is found, the call will throw.
+*/
+function findOneAndUpdate(data, settings, callback){
+    var prequelizeModel = this;
+
+    settings = extendSettings(settings);
+
+    var sequelizeSettings = parseSettings(settings, prequelizeModel),
+        updateTransaction = settings.transaction ?
+            null :
+            prequelizeModel.model.sequelize.transaction();
+
+    function resolveResult(updateTransaction, done){
+        sequelizeSettings.transaction = settings.transaction || updateTransaction;
+
+        var sequelizeResult = prequelizeModel.model.update(
+                transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
+                sequelizeSettings
+            );
+
+        var updateResult = righto(format, sequelizeResult, prequelizeModel);
+
+        updateResult(function(error, result){
+            if(error){
+                if(updateTransaction){
+                    return abbott(updateTransaction.rollback())(function(){
+                        done(error, affected);
+                    });
+                }
+
+                return done(error);
+            }
+
+            var affected = result[0];
+
+            if(affected > 1){
+                throw new Error('Expected only 1 affected row, instead affected ' + affected);
+            }
+
+            function checkOne(error, affected){
+                if(error || affected < 1){
+                    return done(error || new errors.NotFound());
+                }
+
+                done(null, affected);
+            }
+
+            if(updateTransaction){
+                return abbott(updateTransaction.commit())(function(commitError){
+                    checkOne(commitError, affected);
+                });
+            }
+
+            checkOne(null, affected);
+        });
+    }
+
+    var result = righto(resolveResult, updateTransaction);
+
+    callback && result(callback);
+
+    return result;
+}
+
+/*
+    ## Update.
+
+    Update exactly one result by ID.
+
+    If no results are found, the call will be rejected with an Error with code 404.
+*/
+function update(id, data, settings, callback){
+    settings = extendSettings(settings, {
+        where: {
+            id: id
+        }
+    });
+
+    return findOneAndUpdate.call(this, data, settings, callback);
 }
 
 var defaultTransformProperty = {
@@ -328,9 +401,12 @@ function createModelMethods(model, modelName, settings) {
     prequelizeModel.findAndCountAll = findAndCountAll.bind(prequelizeModel);
     prequelizeModel.findOne = findOne.bind(prequelizeModel);
     prequelizeModel.remove = remove.bind(prequelizeModel);
-    prequelizeModel.removeOne = removeOne.bind(prequelizeModel);
+    prequelizeModel.findAndRemove = findAndRemove.bind(prequelizeModel);
+    prequelizeModel.findOneAndRemove = findOneAndRemove.bind(prequelizeModel);
     prequelizeModel.create = create.bind(prequelizeModel);
     prequelizeModel.update = update.bind(prequelizeModel);
+    prequelizeModel.findAndUpdate = findAndUpdate.bind(prequelizeModel);
+    prequelizeModel.findOneAndUpdate = findOneAndUpdate.bind(prequelizeModel);
 
     return prequelizeModel;
 }

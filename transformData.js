@@ -1,15 +1,4 @@
-
-function getSubModel(property, model){
-    if(!model){
-        return;
-    }
-
-    for(var key in model.associations){
-        if(model.associations[key].identifierField === property){
-            return model.associations[key];
-        }
-    }
-}
+var getSubModel = require('./getSubModel');
 
 function transformObject(object, propertyName, model, settings, transformPropertyFn){
     var result = Array.isArray(object) ? [] : {};
@@ -23,7 +12,7 @@ function transformObject(object, propertyName, model, settings, transformPropert
 }
 
 function transform(data, propertyName, model, subModel, settings, transformPropertyFn){
-    if(typeof data === 'object'){
+    if(data && typeof data === 'object'){
         return transformObject(data, propertyName, subModel, settings, transformPropertyFn);
     }
 
