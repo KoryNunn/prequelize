@@ -67,12 +67,22 @@ function buildQuery(settings, where, include, model, alias){
 }
 
 function parseSettings(settings, prequelizeModel){
-    return buildQuery(
+    var sequelizeSettings = buildQuery(
         prequelizeModel.settings,
         settings.where,
         settings.include,
         prequelizeModel.model
     );
+
+    for(var key in settings){
+        if(key === 'where' || key === 'include'){
+            continue;
+        }
+
+        sequelizeSettings[key] = settings[key];
+    }
+
+    return sequelizeSettings;
 }
 
 module.exports = parseSettings;

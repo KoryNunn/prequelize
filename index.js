@@ -44,14 +44,12 @@ function get(id, settings, callback){
 function find(settings, callback){
     var prequelizeModel = this;
 
-    settings = extendSettings(settings);
-
-    var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
+    settings = extendSettings(settings, {
         limit: 1,
         transaction: settings.transaction
     });
+
+    var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
     var sequelizeResult = prequelizeModel.model.find(sequelizeSettings);
 
@@ -74,10 +72,6 @@ function findAll(settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    extend(sequelizeSettings, {
-        transaction: settings.transaction
-    });
-
     var sequelizeResult = prequelizeModel.model.findAll(sequelizeSettings);
 
     var result = righto(format, sequelizeResult, prequelizeModel);
@@ -98,10 +92,6 @@ function findAndCountAll(settings, callback){
     settings = extendSettings(settings);
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
-        transaction: settings.transaction
-    });
 
     var sequelizeResult = prequelizeModel.model.findAndCountAll(sequelizeSettings);
 
@@ -124,14 +114,11 @@ function findAndCountAll(settings, callback){
 function findOne(settings, callback){
     var prequelizeModel = this;
 
-    settings = extendSettings(settings);
+    settings = extendSettings(settings, {
+        limit: 2
+    });
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
-        limit: 2,
-        transaction: settings.transaction
-    });
 
     var sequelizeResult = prequelizeModel.model.findAll(sequelizeSettings);
 
@@ -153,10 +140,6 @@ function findAndRemove(settings, callback){
     settings = extendSettings(settings);
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
-        transaction: settings.transaction
-    });
 
     var sequelizeResult = prequelizeModel.model.remove(sequelizeSettings);
 
@@ -186,16 +169,14 @@ function findOneAndRemove(settings, callback){
             null :
             prequelizeModel.model.sequelize.transaction();
 
-    sequelizeSettings.transaction = settings.transaction || removeTransaction;
+    function resolveResult(removeTransaction, done){
+        sequelizeSettings.transaction = settings.transaction || removeTransaction;
 
-    var sequelizeResult = prequelizeModel.model.remove(sequelizeSettings);
+        var sequelizeResult = prequelizeModel.model.remove(sequelizeSettings);
 
-    function resolveResult(done){
         var deleteResult = righto(format, sequelizeResult, prequelizeModel);
 
         deleteResult(function(error, result){
-            var affected = result[0];
-
             if(error){
                 if(removeTransaction){
                     return abbott(removeTransaction.rollback())(function(){
@@ -205,6 +186,8 @@ function findOneAndRemove(settings, callback){
 
                 return done(error);
             }
+
+            var affected = result[0];
 
             if(affected > 1){
                 throw new Error('Expected only 1 affected row, instead affected ' + affected);
@@ -228,7 +211,7 @@ function findOneAndRemove(settings, callback){
         });
     }
 
-    var result = righto(resolveResult);
+    var result = righto(resolveResult, removeTransaction);
 
     callback && result(callback);
 
@@ -266,10 +249,6 @@ function create(data, settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    extend(sequelizeSettings, {
-        transaction: settings.transaction
-    });
-
     var sequelizeResult = prequelizeModel.model.create(
             transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
             sequelizeSettings
@@ -293,10 +272,6 @@ function findAndUpdate(data, settings, callback){
     settings = extendSettings(settings);
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
-
-    extend(sequelizeSettings, {
-        transaction: settings.transaction
-    });
 
     var sequelizeResult = prequelizeModel.model.update(
             transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
@@ -329,21 +304,17 @@ function findOneAndUpdate(data, settings, callback){
             null :
             prequelizeModel.model.sequelize.transaction();
 
-    extend(sequelizeSettings, {
-        transaction: settings.transaction || updateTransaction
-    });
+    function resolveResult(updateTransaction, done){
+        sequelizeSettings.transaction = settings.transaction || updateTransaction;
 
-    var sequelizeResult = prequelizeModel.model.update(
-            transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
-            sequelizeSettings
-        );
+        var sequelizeResult = prequelizeModel.model.update(
+                transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
+                sequelizeSettings
+            );
 
-    function resolveResult(done){
         var updateResult = righto(format, sequelizeResult, prequelizeModel);
 
         updateResult(function(error, result){
-            var affected = result[0];
-
             if(error){
                 if(updateTransaction){
                     return abbott(updateTransaction.rollback())(function(){
@@ -353,6 +324,8 @@ function findOneAndUpdate(data, settings, callback){
 
                 return done(error);
             }
+
+            var affected = result[0];
 
             if(affected > 1){
                 throw new Error('Expected only 1 affected row, instead affected ' + affected);
@@ -376,7 +349,7 @@ function findOneAndUpdate(data, settings, callback){
         });
     }
 
-    var result = righto(resolveResult);
+    var result = righto(resolveResult, updateTransaction);
 
     callback && result(callback);
 
