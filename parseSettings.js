@@ -20,7 +20,7 @@ function buildQuery(settings, where, include, model, alias){
 
     var result = {
             where: {},
-            attributes: [],
+            attributes: include['*'] ? null : [],
             model: model,
             required: false
         },
@@ -41,7 +41,7 @@ function buildQuery(settings, where, include, model, alias){
             result.required = true;
         }
 
-        if(include && !subModel && (include === true || include[key] || include[key])){
+        if(result.attributes && include && !subModel && (include === true || include[key] || include[key])){
             result.attributes.push(key);
         }
 
@@ -62,7 +62,7 @@ function buildQuery(settings, where, include, model, alias){
 
     var includeKeys = Object.keys(includeResult);
 
-    if (includeKeys.length) {
+    if (result.attributes && includeKeys.length) {
 
         result.attributes.push(ID);
 
