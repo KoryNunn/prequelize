@@ -243,7 +243,7 @@ function findOne(settings, callback){
 }
 
 /*
-    ## Remove.
+    ## Find And Remove.
 
     Remove all results of a query.
 */
@@ -375,7 +375,7 @@ function create(data, settings, callback){
 }
 
 /*
-    ## Update.
+    ## Find And Update.
 
     Update all results of a query.
 */
@@ -399,7 +399,7 @@ function findAndUpdate(data, settings, callback){
 }
 
 /*
-    ## Update One.
+    ## Find And Update One.
 
     Update exactly one result of a query.
 
