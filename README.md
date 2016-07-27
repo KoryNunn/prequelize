@@ -67,20 +67,31 @@ Using normal callbacks:
 ```
     // Get a person with a callback,
     // Executes immediately
-    prequelize.Person.get(123, {
-            include: { $fields: ['firstName']}
-        }function(error, person){
+    prequelize.Person.get(
+        123,
+        {
+            include: {
+                $fields: ['firstName']
+            }
+        },
+        function(error, person){
 
-    });
+        }
+    );
 ```
 
 Using the returned righto:
 
 ```
     // Get a person righto, does not execute until used.
-    var person = prequelize.Person.get(123, {
-            include: { $fields: ['firstName']}
-        });
+    var person = prequelize.Person.get(
+            123,
+            {
+                include: {
+                    $fields: ['firstName']
+                }
+            }
+        );
 
     // Execute the query and get the resut.
     person(function(error, person){
