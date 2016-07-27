@@ -11,6 +11,13 @@ function uniqueKeys(objects){
 }
 
 function buildQuery(settings, where, include, model, alias){
+    if(include && include.$fields){
+        include.$fields.forEach(function(field){
+            include[field] = true;
+        });
+        delete include.$fields;
+    }
+
     var result = {
             where: {},
             attributes: [],
@@ -23,6 +30,7 @@ function buildQuery(settings, where, include, model, alias){
         result.as = alias;
     }
 
+
     var includeResult = {};
 
     keys.forEach(function(key){
@@ -33,7 +41,7 @@ function buildQuery(settings, where, include, model, alias){
             result.required = true;
         }
 
-        if(include && !subModel && (include === true || include[key])){
+        if(include && !subModel && (include === true || include[key] || include[key])){
             result.attributes.push(key);
         }
 
