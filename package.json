@@ -8,12 +8,14 @@
     "cyclic-deep-extend": "^1.0.2",
     "flat-merge": "^1.0.0",
     "generic-errors": "^2.0.2",
+    "grepjs": "^1.0.0",
     "object-tojson": "^1.0.1",
     "righto": "^1.7.1"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "cat index.js | grepjs '\/\\*([^]*?)\\*\/(?:\\s*?(\n+)function\\s?(\\w*\\(.*?\\)))?' | grepjs '(.*?)((?:\\n|^)    )([^]*?)' -r='$1\\n$3' > README.md"
   },
   "repository": {
     "type": "git",
