@@ -18,9 +18,11 @@ function buildQuery(settings, where, include, model, alias){
         delete include.$fields;
     }
 
+    var hasAttributes = include && !include['*'];
+
     var result = {
             where: {},
-            attributes: include['*'] ? null : [],
+            attributes: hasAttributes && [],
             model: model,
             required: false
         },
@@ -41,11 +43,11 @@ function buildQuery(settings, where, include, model, alias){
             result.required = true;
         }
 
-        if(result.attributes && include && !subModel && (include === true || include[key] || include[key])){
+        if(hasAttributes && include && !subModel && (include === true || include[key] || include[key])){
             result.attributes.push(key);
         }
 
-        if(subModel){
+        if(subModel && (where && where[key] || include && include[key])){
             // another check here could be model.associations[key].isSelfAssociation however the as is a generic thingy that isnt limited to selfassociations
             var alias = subModel.isAliased ? subModel.as : false;
             result.required = true;
@@ -62,13 +64,14 @@ function buildQuery(settings, where, include, model, alias){
 
     var includeKeys = Object.keys(includeResult);
 
-    if (result.attributes && includeKeys.length) {
-
+    if(hasAttributes){
         result.attributes.push(ID);
 
-        result.include = includeKeys.map(function(key){
-            return includeResult[key];
-        });
+        if(includeKeys.length) {
+            result.include = includeKeys.map(function(key){
+                return includeResult[key];
+            });
+        }
     }
 
     return result;
