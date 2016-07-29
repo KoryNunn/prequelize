@@ -66,12 +66,12 @@ function buildQuery(settings, where, include, model, alias){
 
     if(hasAttributes){
         result.attributes.push(ID);
+    }
 
-        if(includeKeys.length) {
-            result.include = includeKeys.map(function(key){
-                return includeResult[key];
-            });
-        }
+    if(includeKeys.length) {
+        result.include = includeKeys.map(function(key){
+            return includeResult[key];
+        });
     }
 
     return result;
