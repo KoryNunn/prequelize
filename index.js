@@ -409,16 +409,7 @@ function findAndUpdate(data, settings, callback){
     return result;
 }
 
-/*
-    ## Find And Update One.
-
-    Update exactly one result of a query.
-
-    If no results are found, the call will be rejected with an Error with code 404.
-
-    If more than one result is found, the call will throw.
-*/
-function findOneAndUpdate(data, settings, callback){
+function findManyAndUpdate(count, data, settings, callback){
     var prequelizeModel = this;
 
     settings = extendSettings(settings);
@@ -451,12 +442,12 @@ function findOneAndUpdate(data, settings, callback){
 
             var affected = result[0];
 
-            if(affected > 1){
-                throw new Error('Expected only 1 affected row, instead affected ' + affected);
+            if(affected > count){
+                throw new Error('Expected only ' + count + ' affected row/s, instead affected ' + affected);
             }
 
             function checkOne(error, affected){
-                if(error || affected < 1){
+                if(error || affected < count){
                     return done(error || new errors.NotFound());
                 }
 
@@ -481,6 +472,19 @@ function findOneAndUpdate(data, settings, callback){
 }
 
 /*
+    ## Find And Update One.
+
+    Update exactly one result of a query.
+
+    If no results are found, the call will be rejected with an Error with code 404.
+
+    If more than one result is found, the call will throw.
+*/
+function findOneAndUpdate(data, settings, callback){
+    return findManyAndUpdate.call(this, 1, data, settings, callback);
+}
+
+/*
     ## Update.
 
     Update exactly one result by ID.
@@ -497,6 +501,23 @@ function update(id, data, settings, callback){
     return findOneAndUpdate.call(this, data, settings, callback);
 }
 
+/*
+    ## Update Many.
+
+    Update exactly the length of the ids array passed in.
+
+    If less than this is updated, the call will be rejected with an Error with code 404.
+*/
+function updateMany(ids, data, settings, callback){
+    settings = extendSettings(settings, {
+        where: {
+            id: ids
+        }
+    });
+
+    return findManyAndUpdate.call(this, ids.length, data, settings, callback);
+}
+
 var defaultTransformProperty = {
     to: function(data){
         return data;
@@ -504,7 +525,7 @@ var defaultTransformProperty = {
     from: function(data){
         return data;
     }
-}
+};
 
 function createModelMethods(model, modelName, settings) {
     var modelSettings = settings.modelSettings && settings.modelSettings[modelName],
@@ -529,6 +550,7 @@ function createModelMethods(model, modelName, settings) {
     prequelizeModel.findOneAndRemove = findOneAndRemove.bind(prequelizeModel);
     prequelizeModel.create = create.bind(prequelizeModel);
     prequelizeModel.update = update.bind(prequelizeModel);
+    prequelizeModel.updateMany = updateMany.bind(prequelizeModel);
     prequelizeModel.findAndUpdate = findAndUpdate.bind(prequelizeModel);
     prequelizeModel.findOneAndUpdate = findOneAndUpdate.bind(prequelizeModel);
 
