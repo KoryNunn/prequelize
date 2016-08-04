@@ -447,12 +447,8 @@ function findManyAndUpdate(count, data, settings, callback){
             }
 
             function checkCount(error, affected){
-                if (error) {
-                    return done(error);
-                }
-
-                if (affected < count) {
-                    return done(count === 1 ? new errors.NotFound() : new errors.Unprocessable());
+                if(error || affected < count){
+                    return done(error || new errors.Unprocessable());
                 }
 
                 done(null, affected);
@@ -485,7 +481,17 @@ function findManyAndUpdate(count, data, settings, callback){
     If more than one result is found, the call will throw.
 */
 function findOneAndUpdate(data, settings, callback){
-    return findManyAndUpdate.call(this, 1, data, settings, callback);
+    return findManyAndUpdate.call(this, 1, data, settings, function(error, result) {
+        if (error) {
+            if (error instanceof errors.Unprocessable) {
+                return callback(new errors.NotFound());
+            }
+
+            return callback(error);
+        }
+
+        callback(null, result);
+    });
 }
 
 /*
