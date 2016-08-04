@@ -1,6 +1,10 @@
 var getSubModel = require('./getSubModel');
 
 function transformObject(object, propertyName, model, settings, transformPropertyFn){
+    if (object instanceof Date) {
+        return object;
+    }
+
     var result = Array.isArray(object) ? [] : {};
 
     for(var key in object){
