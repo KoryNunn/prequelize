@@ -446,9 +446,13 @@ function findManyAndUpdate(count, data, settings, callback){
                 throw new Error('Expected only ' + count + ' affected row/s, instead affected ' + affected);
             }
 
-            function checkOne(error, affected){
-                if(error || affected < count){
-                    return done(error || new errors.NotFound());
+            function checkCount(error, affected){
+                if (error) {
+                    return done(error);
+                }
+
+                if (affected < count) {
+                    return done(count === 1 ? new errors.NotFound() : new errors.Unprocessable());
                 }
 
                 done(null, affected);
@@ -456,11 +460,11 @@ function findManyAndUpdate(count, data, settings, callback){
 
             if(updateTransaction){
                 return abbott(updateTransaction.commit())(function(commitError){
-                    checkOne(commitError, affected);
+                    checkCount(commitError, affected);
                 });
             }
 
-            checkOne(null, affected);
+            checkCount(null, affected);
         });
     }
 
@@ -506,7 +510,7 @@ function update(id, data, settings, callback){
 
     Update exactly the length of the ids array passed in.
 
-    If less than this is updated, the call will be rejected with an Error with code 404.
+    If less than this is updated, the call will be rejected with an Error with code 422 (Unprocessable).
 */
 function updateMany(ids, data, settings, callback){
     settings = extendSettings(settings, {

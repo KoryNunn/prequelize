@@ -213,7 +213,7 @@ update(id, data, settings, callback)
 
 Update exactly the length of the ids array passed in.
 
-If less than this is updated, the call will be rejected with an Error with code 404.
+If less than this is updated, the call will be rejected with an Error with code 422 (Unprocessable).
 
 updateMany(ids, data, settings, callback)
 
