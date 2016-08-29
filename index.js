@@ -198,7 +198,11 @@ function findAll(settings, callback){
 
     var sequelizeResult = prequelizeModel.model.findAll(sequelizeSettings);
 
-    var result = righto(format, sequelizeResult, prequelizeModel);
+    var result = righto.all(righto.sync(function(result) {
+        return result.map(function(row) {
+            return righto(format, row, prequelizeModel);
+        });
+    }, sequelizeResult));
 
     callback && result(callback);
 
@@ -219,7 +223,14 @@ function findAndCountAll(settings, callback){
 
     var sequelizeResult = prequelizeModel.model.findAndCountAll(sequelizeSettings);
 
-    var result = righto(format, sequelizeResult, prequelizeModel);
+    var result = righto.resolve({
+        count: sequelizeResult.get('count'),
+        rows: righto.all(righto.sync(function(result) {
+            return result.rows.map(function(row) {
+                return righto(format, row, prequelizeModel);
+            });
+        }, sequelizeResult))
+    });
 
     callback && result(callback);
 
