@@ -1,4 +1,3 @@
-var ID = 'id';
 var getSubModel = require('./getSubModel');
 
 function uniqueKeys(objects){
@@ -18,11 +17,9 @@ function buildQuery(settings, where, include, model, alias){
         delete include.$fields;
     }
 
-    var hasAttributes = include && !include['*'];
-
     var result = {
             where: {},
-            attributes: hasAttributes && [],
+            attributes: ['id'],
             model: model,
             required: false
         },
@@ -31,7 +28,6 @@ function buildQuery(settings, where, include, model, alias){
     if (alias) {
         result.as = alias;
     }
-
 
     var includeResult = {};
 
@@ -43,7 +39,7 @@ function buildQuery(settings, where, include, model, alias){
             result.required = true;
         }
 
-        if(hasAttributes && include && !subModel && (include === true || include[key] || include[key])){
+        if(key !== '*' && include && !subModel && (include === true || include[key] || include['*'])){
             result.attributes.push(key);
         }
 
@@ -63,10 +59,6 @@ function buildQuery(settings, where, include, model, alias){
     });
 
     var includeKeys = Object.keys(includeResult);
-
-    if(hasAttributes){
-        result.attributes.push(ID);
-    }
 
     if(includeKeys.length) {
         result.include = includeKeys.map(function(key){
