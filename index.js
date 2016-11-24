@@ -276,7 +276,7 @@ function findAndRemove(settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    var sequelizeResult = prequelizeModel.model.remove(sequelizeSettings);
+    var sequelizeResult = prequelizeModel.model.destroy(sequelizeSettings);
 
     var result = righto(format, sequelizeResult, prequelizeModel);
 
@@ -307,7 +307,7 @@ function findOneAndRemove(settings, callback){
     function resolveResult(removeTransaction, done){
         sequelizeSettings.transaction = settings.transaction || removeTransaction;
 
-        var sequelizeResult = prequelizeModel.model.remove(sequelizeSettings);
+        var sequelizeResult = prequelizeModel.model.destroy(sequelizeSettings);
 
         var deleteResult = righto(format, sequelizeResult, prequelizeModel);
 
