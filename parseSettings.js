@@ -3,13 +3,16 @@ var getSubModel = require('./getSubModel');
 function uniqueKeys(objects){
     return Object.keys(objects.reduce(function(result, object){
         for(var key in object){
+            if(key === '$through'){
+                continue;
+            }
             result[key] = true;
         }
         return result;
     }, {}));
 }
 
-function buildQuery(settings, where, include, model, alias){
+function buildQuery(settings, where, include, model, throughModel, alias){
     if(include && include.$fields){
         include.$fields.forEach(function(field){
             include[field] = true;
@@ -24,6 +27,18 @@ function buildQuery(settings, where, include, model, alias){
             required: false
         },
         keys = uniqueKeys([where, include, model.tableAttributes]);
+
+    if(where && where.$through){
+        debugger;
+        result.through = buildQuery(
+            settings,
+            where.$through,
+            include && include.$through,
+            throughModel,
+            null,
+            throughModel.isAliased ? throughModel.as : false
+        );
+    }
 
     if (alias) {
         result.as = alias;
@@ -53,6 +68,7 @@ function buildQuery(settings, where, include, model, alias){
                 where && where[key],
                 include && include[key],
                 subModel.target,
+                subModel.throughModel,
                 alias
             );
         }
@@ -84,6 +100,8 @@ function parseSettings(settings, prequelizeModel){
 
         sequelizeSettings[key] = settings[key];
     }
+
+    console.log(require('util').inspect(sequelizeSettings, null, 10));
 
     return sequelizeSettings;
 }
