@@ -98,8 +98,6 @@ function parseSettings(settings, prequelizeModel){
         sequelizeSettings[key] = settings[key];
     }
 
-    console.log(require('util').inspect(sequelizeSettings, null, 10));
-
     return sequelizeSettings;
 }
 
