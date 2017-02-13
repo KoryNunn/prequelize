@@ -217,3 +217,28 @@ If less than this is updated, the call will be rejected with an Error with code 
 
 updateMany(ids, data, settings, callback)
 
+## Querying through associations
+
+Given a through association like so:
+
+```
+project = { name, ... }
+user = { name, ... }
+projectUser = { canCreate }
+```
+
+you can just query the assiciation by name:
+
+```
+{
+    where: {
+        name: 'project1',
+        user: {
+            name: 'bob',
+            projectUser: {
+              canCreate: true
+            }
+        }
+    }
+}
+```
