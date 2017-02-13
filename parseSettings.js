@@ -3,9 +3,6 @@ var getSubModel = require('./getSubModel');
 function uniqueKeys(objects){
     return Object.keys(objects.reduce(function(result, object){
         for(var key in object){
-            if(key === '$through'){
-                continue;
-            }
             result[key] = true;
         }
         return result;
@@ -28,16 +25,16 @@ function buildQuery(settings, where, include, model, throughModel, alias){
         },
         keys = uniqueKeys([where, include, model.tableAttributes]);
 
-    if(where && where.$through){
-        debugger;
+    if(where && throughModel && throughModel.name in where){
         result.through = buildQuery(
             settings,
-            where.$through,
-            include && include.$through,
+            where[throughModel.name],
+            include && include[throughModel.name],
             throughModel,
             null,
             throughModel.isAliased ? throughModel.as : false
         );
+        delete where[throughModel.name];
     }
 
     if (alias) {
