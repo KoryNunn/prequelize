@@ -9,7 +9,7 @@ function uniqueKeys(objects){
     }, {}));
 }
 
-function buildQuery(settings, where, include, model, alias){
+function buildQuery(settings, where, include, model, throughModel, alias){
     if(include && include.$fields){
         include.$fields.forEach(function(field){
             include[field] = true;
@@ -24,6 +24,18 @@ function buildQuery(settings, where, include, model, alias){
             required: false
         },
         keys = uniqueKeys([where, include, model.tableAttributes]);
+
+    if(where && throughModel && throughModel.name in where){
+        result.through = buildQuery(
+            settings,
+            where[throughModel.name],
+            include && include[throughModel.name],
+            throughModel,
+            null,
+            throughModel.isAliased ? throughModel.as : false
+        );
+        delete where[throughModel.name];
+    }
 
     if (alias) {
         result.as = alias;
@@ -53,6 +65,7 @@ function buildQuery(settings, where, include, model, alias){
                 where && where[key],
                 include && include[key],
                 subModel.target,
+                subModel.throughModel,
                 alias
             );
         }
