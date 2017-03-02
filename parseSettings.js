@@ -1,9 +1,15 @@
 var getSubModel = require('./getSubModel');
 
+function isOpperator(key){
+    return key.charAt(0) === '$';
+}
+
 function uniqueKeys(objects){
     return Object.keys(objects.reduce(function(result, object){
         for(var key in object){
-            result[key] = true;
+            if(!isOpperator(key)){
+                result[key] = true;
+            }
         }
         return result;
     }, {}));
@@ -70,6 +76,29 @@ function buildQuery(settings, where, include, model, throughModel, alias){
             );
         }
     });
+
+    for(var key in where){
+        if(!isOpperator(key)){
+            continue;
+        }
+
+        if(key === '$or'){
+            var results = where[key].map(function(orWhere){
+                return buildQuery(settings, orWhere, null, model, throughModel, alias);
+            });
+
+            result.where[key] = results.map(function(result){
+                return result.where;
+            });
+
+            includeResult[key] = results.reduce(function(results, result){
+                if(result.include){
+                    results.push(result.include);
+                }
+                return results;
+            }, []);
+        }
+    }
 
     var includeKeys = Object.keys(includeResult);
 
