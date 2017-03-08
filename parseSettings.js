@@ -9,6 +9,18 @@ function uniqueKeys(objects){
     }, {}));
 }
 
+function distinct(items){
+    var keys = {};
+
+    return items.filter(function(string){
+        if(keys[string]){
+            return;
+        }
+
+        return keys[string] = true;
+    });
+}
+
 function buildQuery(settings, where, include, model, throughModel, alias){
     if(include && include.$fields){
         include.$fields.forEach(function(field){
@@ -78,6 +90,8 @@ function buildQuery(settings, where, include, model, throughModel, alias){
             return includeResult[key];
         });
     }
+
+    result.attributes = distinct(result.attributes);
 
     return result;
 }
