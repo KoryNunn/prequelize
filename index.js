@@ -124,6 +124,18 @@ function extendSettings(settings, extendedSettings){
     ```
 */
 
+function checkArgs(settings, callback){
+    if(typeof settings === 'function' && !righto.isRighto(settings)){
+        callback = settings;
+        settings = null;
+    }
+
+    return {
+        settings: settings,
+        callback: callback
+    };
+}
+
 /*
     ## Get.
 
@@ -132,6 +144,10 @@ function extendSettings(settings, extendedSettings){
     If no results are found, the call will be rejected with an Error with code 404.
 */
 function get(id, settings, callback){
+    var checked = checkArgs(settings, callback);
+    settings = checked.settings;
+    callback = checked.callback;
+
     settings = extendSettings(settings, {
         where: {
             id: id
@@ -363,6 +379,10 @@ function findOneAndRemove(settings, callback){
 */
 
 function remove(id, settings, callback){
+    var checked = checkArgs(settings, callback);
+    settings = checked.settings;
+    callback = checked.callback;
+
     settings = extendSettings(settings, {
         where: {
             id: id
@@ -378,6 +398,10 @@ function remove(id, settings, callback){
     Create a record.
 */
 function create(data, settings, callback){
+    var checked = checkArgs(settings, callback);
+    settings = checked.settings;
+    callback = checked.callback;
+
     var prequelizeModel = this;
 
     settings = extendSettings(settings);
@@ -402,6 +426,10 @@ function create(data, settings, callback){
     Update all results of a query.
 */
 function findAndUpdate(data, settings, callback){
+    var checked = checkArgs(settings, callback);
+    settings = checked.settings;
+    callback = checked.callback;
+
     var prequelizeModel = this;
 
     settings = extendSettings(settings);
@@ -513,6 +541,10 @@ function findOneAndUpdate(data, settings, callback){
     If no results are found, the call will be rejected with an Error with code 404.
 */
 function update(id, data, settings, callback){
+    var checked = checkArgs(settings, callback);
+    settings = checked.settings;
+    callback = checked.callback;
+
     settings = extendSettings(settings, {
         where: {
             id: id
@@ -530,6 +562,10 @@ function update(id, data, settings, callback){
     If less than this is updated, the call will be rejected with an Error with code 422 (Unprocessable).
 */
 function updateMany(ids, data, settings, callback){
+    var checked = checkArgs(settings, callback);
+    settings = checked.settings;
+    callback = checked.callback;
+
     settings = extendSettings(settings, {
         where: {
             id: ids
