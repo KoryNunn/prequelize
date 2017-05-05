@@ -23,8 +23,7 @@ var parseSettings = require('./parseSettings'),
     errors = require('generic-errors'),
     merge = require('flat-merge'),
     extend = require('cyclic-deep-extend'),
-    oneResultOrError = require('./oneResultOrError'),
-    resultOrError = require('./resultOrError');
+    oneResultOrError = require('./oneResultOrError');
 
 function extendSettings(settings, extendedSettings){
     settings = merge({}, settings || {});
