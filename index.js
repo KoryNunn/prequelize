@@ -420,6 +420,27 @@ function create(data, settings, callback){
 }
 
 /*
+    ## Find One Or Create.
+
+    Find one or Create a record.
+*/
+function findOneOrCreate(data, settings, callback){
+    var found = righto(findOne, settings);
+
+    var createHandle = righto.handle(found, function(error, done){
+            if(error instanceof errors.NotFound){
+                return create(data, settings, done);
+            }
+
+            done(error);
+        });
+
+    callback && createHandle(callback);
+
+    return createHandle;
+}
+
+/*
     ## Find And Update.
 
     Update all results of a query.
@@ -574,6 +595,27 @@ function updateMany(ids, data, settings, callback){
     return findManyAndUpdate.call(this, ids.length, data, settings, callback);
 }
 
+/*
+    ## Find One And Update Or Create.
+
+    Find one and Update or Create a record.
+*/
+function findOneAndUpdateOrCreate(data, settings, callback){
+    var found = righto(findOneAndUpdate, data, settings);
+
+    var createHandle = righto.handle(found, function(error, done){
+            if(error instanceof errors.NotFound){
+                return create(data, settings, done);
+            }
+
+            done(error);
+        });
+
+    callback && createHandle(callback);
+
+    return createHandle;
+}
+
 var defaultTransformProperty = {
     to: function(data){
         return data;
@@ -604,11 +646,13 @@ function createModelMethods(model, modelName, settings) {
     prequelizeModel.remove = remove.bind(prequelizeModel);
     prequelizeModel.findAndRemove = findAndRemove.bind(prequelizeModel);
     prequelizeModel.findOneAndRemove = findOneAndRemove.bind(prequelizeModel);
+    prequelizeModel.findOneOrCreate = findOneOrCreate.bind(prequelizeModel);
     prequelizeModel.create = create.bind(prequelizeModel);
     prequelizeModel.update = update.bind(prequelizeModel);
     prequelizeModel.updateMany = updateMany.bind(prequelizeModel);
     prequelizeModel.findAndUpdate = findAndUpdate.bind(prequelizeModel);
     prequelizeModel.findOneAndUpdate = findOneAndUpdate.bind(prequelizeModel);
+    prequelizeModel.findOneAndUpdateOrCreate = findOneAndUpdateOrCreate.bind(prequelizeModel);
 
     return prequelizeModel;
 }
@@ -620,3 +664,33 @@ module.exports = function(models, settings){
         return result;
     }, {});
 };
+
+/*
+
+## Querying through associations
+
+Given a through association like so:
+
+```
+project = { name, ... }
+user = { name, ... }
+projectUser = { canCreate }
+```
+
+you can just query the assiciation by name:
+
+```
+{
+    where: {
+        name: 'project1',
+        user: {
+            name: 'bob',
+            projectUser: {
+              canCreate: true
+            }
+        }
+    }
+}
+```
+
+*/

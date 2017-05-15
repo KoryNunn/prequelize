@@ -177,13 +177,17 @@ Remove exactly one result by ID.
 If no results are found, the call will be rejected with an Error with code 404.
 
 
-remove(id, settings, callback)
-
 ## Create.
 
 Create a record.
 
 create(data, settings, callback)
+
+## Find One Or Create.
+
+Find one or Create a record.
+
+findOneOrCreate(data, settings, callback)
 
 ## Find And Update.
 
@@ -217,6 +221,13 @@ If less than this is updated, the call will be rejected with an Error with code 
 
 updateMany(ids, data, settings, callback)
 
+## Find One And Update Or Create.
+
+Find one and Update or Create a record.
+
+findOneAndUpdateOrCreate(data, settings, callback)
+
+
 ## Querying through associations
 
 Given a through association like so:
@@ -231,14 +242,17 @@ you can just query the assiciation by name:
 
 ```
 {
-    where: {
-        name: 'project1',
-        user: {
-            name: 'bob',
-            projectUser: {
-              canCreate: true
-            }
+where: {
+    name: 'project1',
+    user: {
+        name: 'bob',
+        projectUser: {
+          canCreate: true
         }
     }
 }
+}
 ```
+
+
+

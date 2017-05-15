@@ -15,7 +15,7 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cat index.js | grepjs '/\\*([^]*?)\\*/(?:\\s*?(\n+)function\\s?(\\w*\\(.*?\\)))?' | grepjs '(.*?)((?:\\n|^)    )([^]*?)' -r='$1\\n$3' > README.md"
+    "build": "cat index.js | grepjs '/\\*([^]*?)\\*/(?:(\n)function\\s?(\\w*\\(.*?\\)))?' | grepjs '(.*?)((?:\\n|^)    )([^]*?)' -r='$1\\n$3' > README.md"
   },
   "repository": {
     "type": "git",
