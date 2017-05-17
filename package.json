@@ -10,11 +10,15 @@
     "generic-errors": "^2.0.2",
     "grepjs": "^1.0.0",
     "object-tojson": "^1.0.1",
-    "righto": "^2.3.0"
+    "righto": "^3.0.0",
+    "tape": "^4.6.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mkdirp": "^0.5.1",
+    "rimraf": "^2.6.1"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test",
     "build": "cat index.js | grepjs '/\\*([^]*?)\\*/(?:(\n)function\\s?(\\w*\\(.*?\\)))?' | grepjs '(.*?)((?:\\n|^)    )([^]*?)' -r='$1\\n$3' > README.md"
   },
   "repository": {

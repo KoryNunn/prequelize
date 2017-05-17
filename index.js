@@ -29,6 +29,13 @@ function extendSettings(settings, extendedSettings){
     settings = merge({}, settings || {});
     extendedSettings = extendedSettings || {};
     settings.where = extend(settings.where, extendedSettings.where || {});
+
+    if(settings.include && settings.include === '*'){
+        settings.include = {
+            $fields: ['*']
+        };
+    }
+
     settings.include = extend(settings.include, extendedSettings.include || {});
     return settings;
 }
@@ -190,7 +197,7 @@ function find(settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    var sequelizeResult = prequelizeModel.model.find(sequelizeSettings);
+    var sequelizeResult = righto.from(prequelizeModel.model.find.bind(prequelizeModel.model), sequelizeSettings);
 
     var result = righto(format, sequelizeResult, prequelizeModel);
 
@@ -211,7 +218,7 @@ function findAll(settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    var sequelizeResult = prequelizeModel.model.findAll(sequelizeSettings);
+    var sequelizeResult = righto.from(prequelizeModel.model.findAll.bind(prequelizeModel.model), sequelizeSettings);
 
     var result = righto.all(righto.sync(function(result) {
         return result.map(function(row) {
@@ -236,7 +243,7 @@ function findAndCountAll(settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    var sequelizeResult = prequelizeModel.model.findAndCountAll(sequelizeSettings);
+    var sequelizeResult = righto.from(prequelizeModel.model.findAndCountAll.bind(prequelizeModel.model), sequelizeSettings);
 
     var result = righto.resolve({
         count: sequelizeResult.get('count'),
@@ -270,7 +277,7 @@ function findOne(settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    var sequelizeResult = prequelizeModel.model.findAll(sequelizeSettings);
+    var sequelizeResult = righto.from(prequelizeModel.model.findAll.bind(prequelizeModel.model), sequelizeSettings);
 
     var result = righto(oneResultOrError, sequelizeResult, prequelizeModel);
 
@@ -291,7 +298,7 @@ function findAndRemove(settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    var sequelizeResult = prequelizeModel.model.destroy(sequelizeSettings);
+    var sequelizeResult = righto.from(prequelizeModel.model.destroy.bind(prequelizeModel.model), sequelizeSettings);
 
     var result = righto(format, sequelizeResult, prequelizeModel);
 
@@ -317,12 +324,14 @@ function findOneAndRemove(settings, callback){
     var sequelizeSettings = parseSettings(settings, prequelizeModel),
         removeTransaction = settings.transaction ?
             null :
-            prequelizeModel.model.sequelize.transaction();
+            righto.sync(function(){
+                return prequelizeModel.model.sequelize.transaction();
+            });
 
     function resolveResult(removeTransaction, done){
         sequelizeSettings.transaction = settings.transaction || removeTransaction;
 
-        var sequelizeResult = prequelizeModel.model.destroy(sequelizeSettings);
+        var sequelizeResult = righto.from(prequelizeModel.model.destroy.bind(prequelizeModel.model), sequelizeSettings);
 
         var deleteResult = righto(format, sequelizeResult, prequelizeModel);
 
@@ -407,7 +416,7 @@ function create(data, settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    var sequelizeResult = prequelizeModel.model.create(
+    var sequelizeResult = righto.from(prequelizeModel.model.create.bind(prequelizeModel.model),
             transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
             sequelizeSettings
         );
@@ -425,11 +434,13 @@ function create(data, settings, callback){
     Find one or Create a record.
 */
 function findOneOrCreate(data, settings, callback){
-    var found = righto(findOne, settings);
+    var prequelizeModel = this;
+
+    var found = righto(prequelizeModel.findOne, settings);
 
     var createHandle = righto.handle(found, function(error, done){
             if(error instanceof errors.NotFound){
-                return create(data, settings, done);
+                return prequelizeModel.create(data, settings, done);
             }
 
             done(error);
@@ -456,7 +467,7 @@ function findAndUpdate(data, settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    var sequelizeResult = prequelizeModel.model.update(
+    var sequelizeResult = righto.from(prequelizeModel.model.update.bind(prequelizeModel.model),
             transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
             sequelizeSettings
         );
@@ -476,12 +487,14 @@ function findManyAndUpdate(count, data, settings, callback){
     var sequelizeSettings = parseSettings(settings, prequelizeModel),
         updateTransaction = settings.transaction ?
             null :
-            prequelizeModel.model.sequelize.transaction();
+            righto.sync(function(){
+                return prequelizeModel.model.sequelize.transaction();
+            });
 
     function resolveResult(updateTransaction, done){
         sequelizeSettings.transaction = settings.transaction || updateTransaction;
 
-        var sequelizeResult = prequelizeModel.model.update(
+        var sequelizeResult = righto.from(prequelizeModel.model.update.bind(prequelizeModel.model),
                 transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
                 sequelizeSettings
             );
@@ -601,11 +614,13 @@ function updateMany(ids, data, settings, callback){
     Find one and Update or Create a record.
 */
 function findOneAndUpdateOrCreate(data, settings, callback){
-    var found = righto(findOneAndUpdate, data, settings);
+    var prequelizeModel = this;
+
+    var found = righto(prequelizeModel.findOneAndUpdate, data, settings);
 
     var createHandle = righto.handle(found, function(error, done){
             if(error instanceof errors.NotFound){
-                return create(data, settings, done);
+                return prequelizeModel.create(data, settings, done);
             }
 
             done(error);

@@ -22,10 +22,17 @@ function distinct(items){
 }
 
 function buildQuery(settings, where, include, model, throughModel, alias){
+
     if(include && include.$fields){
-        include.$fields.forEach(function(field){
-            include[field] = true;
-        });
+
+        if(include.$fields = '*'){
+            include['*'] = true;
+        }else{
+            include.$fields.forEach(function(field){
+                include[field] = true;
+            });
+        }
+
         delete include.$fields;
     }
 
