@@ -3,6 +3,8 @@ var mkdirp = require('mkdirp');
 
 mkdirp.sync('./dbs');
 
+require('./parseFn');
+
 require('./create');
 require('./find');
 require('./update');

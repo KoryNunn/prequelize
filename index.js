@@ -708,4 +708,22 @@ you can just query the assiciation by name:
 }
 ```
 
+## Functions
+
+db functions can be built with a simple expression syntax:
+
+```
+models.user.find({
+    where: {
+        age: {
+            $gte: 10
+        }
+    },
+    include: {
+        count: {
+            $fn: 'count(col("id"))'
+        }
+    }
+});
+```
 */

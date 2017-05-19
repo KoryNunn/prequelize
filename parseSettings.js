@@ -1,4 +1,5 @@
 var getSubModel = require('./getSubModel');
+var parseFn = require('./parseFn');
 
 function uniqueKeys(objects){
     return Object.keys(objects.reduce(function(result, object){
@@ -71,10 +72,15 @@ function buildQuery(settings, where, include, model, throughModel, alias){
         }
 
         if(key !== '*' && include && !subModel && (include === true || include[key] || include['*'])){
-            result.attributes.push(key);
+            if(include && typeof include[key] === 'object' && '$fn' in include[key]){
+                result.attributes.push([parseFn(model.sequelize, key, include[key].$fn), key]);
+            }else{
+                result.attributes.push(key);
+            }
         }
 
         if(subModel && (where && where[key] || include && include[key])){
+
             // another check here could be model.associations[key].isSelfAssociation however the as is a generic thingy that isnt limited to selfassociations
             var alias = subModel.isAliased ? subModel.as : false;
             result.required = true;
@@ -96,7 +102,7 @@ function buildQuery(settings, where, include, model, throughModel, alias){
         result.include = includeKeys.map(function(key){
             return includeResult[key];
         });
-    }
+    };
 
     result.attributes = distinct(result.attributes);
 

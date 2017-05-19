@@ -239,3 +239,39 @@ test('find with relation', function(t){
         });
     });
 });
+
+test('find with count', function(t){
+
+    t.plan(2);
+
+    require('./db')(function(error, models){
+
+        var bob = models.user.create({
+                name: 'bob',
+                age: 50
+            });
+
+        var jen = models.user.create({
+                name: 'jen',
+                age: 25
+            });
+
+        var count = righto(models.user.find, {
+            where: {
+                age: {
+                    $gte: 10
+                }
+            },
+            include: {
+                count: {
+                    $fn: 'count(col("id"))'
+                }
+            }
+        }, righto.after(bob, jen));
+
+        count(function(error, data){
+            t.notOk(error);
+            t.equal(data.count, 2);
+        });
+    });
+});
