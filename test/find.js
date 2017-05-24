@@ -240,6 +240,54 @@ test('find with relation', function(t){
     });
 });
 
+test('find with relation include *', function(t){
+
+    t.plan(2);
+
+    require('./db')(function(error, models){
+
+        var bob = models.user.create({
+                name: 'bob',
+                age: 50
+            });
+
+        var bobsAccount = righto(models.account.create, righto.resolve({
+                userId: bob.get('id'),
+                name: 'bobington2000'
+            }));
+
+        var foundBob = righto(models.user.findOne, {
+            where: {
+                account: {
+                    name: 'bobington2000'
+                }
+            },
+            include: {
+                name: true,
+                age: true,
+                account: '*'
+            }
+        }, righto.after(bobsAccount));
+
+        foundBob(function(error, data){
+            t.notOk(error);
+
+            delete data.id;
+            delete data.account.id;
+            delete data.account.createdAt;
+            delete data.account.updatedAt;
+            delete data.account.userId;
+            t.deepEqual(data, {
+                name: 'bob',
+                age: 50,
+                account:{
+                    name: 'bobington2000'
+                }
+            });
+        });
+    });
+});
+
 test('find with count', function(t){
 
     t.plan(2);

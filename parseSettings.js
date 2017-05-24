@@ -24,6 +24,12 @@ function distinct(items){
 
 function buildQuery(settings, where, include, model, throughModel, alias){
 
+    if(include === '*'){
+        include = {
+            $fields: ['*']
+        };
+    }
+
     if(include && include.$fields){
 
         if(include.$fields = '*'){
