@@ -189,6 +189,12 @@ Find one or Create a record.
 
 findOneOrCreate(data, settings, callback)
 
+## Bulk Create.
+
+Bulk create records.
+
+bulkCreate(data, settings, callback)
+
 ## Find And Update.
 
 Update all results of a query.

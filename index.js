@@ -452,6 +452,34 @@ function findOneOrCreate(data, settings, callback){
 }
 
 /*
+    ## Bulk Create.
+
+    Bulk create records.
+*/
+function bulkCreate(data, settings, callback){
+    var checked = checkArgs(settings, callback);
+    settings = checked.settings;
+    callback = checked.callback;
+
+    var prequelizeModel = this;
+
+    settings = extendSettings(settings);
+
+    var sequelizeSettings = parseSettings(settings, prequelizeModel);
+
+    var sequelizeResult = righto.from(prequelizeModel.model.bulkCreate.bind(prequelizeModel.model),
+            transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
+            sequelizeSettings
+        );
+
+    var result = righto(format, sequelizeResult, prequelizeModel);
+
+    callback && result(callback);
+
+    return result;
+}
+
+/*
     ## Find And Update.
 
     Update all results of a query.
@@ -663,6 +691,7 @@ function createModelMethods(model, modelName, settings) {
     prequelizeModel.findOneAndRemove = findOneAndRemove.bind(prequelizeModel);
     prequelizeModel.findOneOrCreate = findOneOrCreate.bind(prequelizeModel);
     prequelizeModel.create = create.bind(prequelizeModel);
+    prequelizeModel.bulkCreate = bulkCreate.bind(prequelizeModel);
     prequelizeModel.update = update.bind(prequelizeModel);
     prequelizeModel.updateMany = updateMany.bind(prequelizeModel);
     prequelizeModel.findAndUpdate = findAndUpdate.bind(prequelizeModel);

@@ -53,3 +53,29 @@ test('findOneOrCreate', function(t){
 
     });
 });
+
+test('bulkCreate', function(t){
+
+    t.plan(2);
+
+    require('./db')(function(error, models){
+
+        var usersData = [];
+
+        for(var i = 0; i < 50; i++){
+            usersData.push({
+                name: 'bob' + i,
+                age: 50 + i
+            });
+        }
+
+        var users = models.user.bulkCreate(usersData);
+
+        users(function(error, users){
+            t.notOk(error);
+
+            t.equal(users.length, usersData.length);
+        });
+
+    });
+});
