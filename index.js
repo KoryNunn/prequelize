@@ -522,46 +522,63 @@ function findManyAndUpdate(count, data, settings, callback){
     function resolveResult(updateTransaction, done){
         sequelizeSettings.transaction = settings.transaction || updateTransaction;
 
+        var matchedRows = righto.from(prequelizeModel.model.findAll.bind(prequelizeModel.model),
+                sequelizeSettings
+            );
+
+        var matchedIds = matchedRows.get(function(matched){
+                if(matched.length > count){
+                    throw new Error('Expected only ' + count + ' affected row/s, instead affected ' + affected);
+                }
+
+                if(matched.length < count){
+                    return righto.fail(new errors.Unprocessable('Expected ' + count + ' matched ' + matched));
+                }
+
+                return matched.map(function(item){
+                    if(item.dataValues.id == null){
+                        throw new Error('prequelize can\'t update tables without an ID.');
+                    }
+
+                    return item.dataValues.id;
+                });
+            });
+
+        var sequelizeUpdateSettings = matchedIds.get(function(ids){
+                return {
+                    where: {
+                        id: ids
+                    },
+                    transaction: sequelizeSettings.transaction
+                };
+            });
+
         var sequelizeResult = righto.from(prequelizeModel.model.update.bind(prequelizeModel.model),
                 transformData(data, prequelizeModel, prequelizeModel.settings.transformProperty.to),
-                sequelizeSettings
+                sequelizeUpdateSettings
             );
 
         var updateResult = righto(format, sequelizeResult, prequelizeModel);
 
-        updateResult(function(error, result){
-            if(error){
-                if(updateTransaction){
-                    return abbott(updateTransaction.rollback())(function(){
-                        done(error, affected);
-                    });
-                }
+        var transactionComplete = righto(function(done){
+                updateResult(function(error){
+                    if(updateTransaction){
+                        if(error){
+                            return abbott(updateTransaction.rollback())(function(transactionError){
+                                done(transactionError || error);
+                            });
+                        }
 
-                return done(error);
-            }
+                        return abbott(updateTransaction.commit())(done);
+                    }
 
-            var affected = result[0];
-
-            if(affected > count){
-                throw new Error('Expected only ' + count + ' affected row/s, instead affected ' + affected);
-            }
-
-            function checkCount(error, affected){
-                if(error || affected < count){
-                    return done(error || new errors.Unprocessable());
-                }
-
-                done(null, affected);
-            }
-
-            if(updateTransaction){
-                return abbott(updateTransaction.commit())(function(commitError){
-                    checkCount(commitError, affected);
+                    done(error);
                 });
-            }
+            });
 
-            checkCount(null, affected);
-        });
+        var result = righto.mate(updateResult, righto.after(transactionComplete));
+
+        result(done);
     }
 
     var result = righto(resolveResult, updateTransaction);
