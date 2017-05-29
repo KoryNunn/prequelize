@@ -349,6 +349,7 @@ function findOneAndRemove(settings, callback){
             var affected = result[0];
 
             if(affected > 1){
+                console.error('Error. Model:', prequelizeModel.name, 'Update settings:', settings.where);
                 throw new Error('Expected only 1 affected row, instead affected ' + affected);
             }
 
@@ -528,6 +529,7 @@ function findManyAndUpdate(count, data, settings, callback){
 
         var matchedIds = matchedRows.get(function(matched){
                 if(matched.length > count){
+                    console.error('Error. Model:', prequelizeModel.name, 'Update settings:', settings.where);
                     throw new Error('Expected only ' + count + ' affected row/s, instead affected ' + affected);
                 }
 
@@ -537,6 +539,7 @@ function findManyAndUpdate(count, data, settings, callback){
 
                 return matched.map(function(item){
                     if(item.dataValues.id == null){
+                        console.error('Error. Model:', prequelizeModel.name, 'Update settings:', settings.where);
                         throw new Error('prequelize can\'t update tables without an ID.');
                     }
 
