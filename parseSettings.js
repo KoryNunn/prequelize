@@ -89,7 +89,7 @@ function buildQuery(settings, where, include, model, throughModel, alias){
 
             // another check here could be model.associations[key].isSelfAssociation however the as is a generic thingy that isnt limited to selfassociations
             var alias = subModel.isAliased ? subModel.as : false;
-            result.required = true;
+            result.required = result.required || !!(where && where[key]);
 
             includeResult[key] = buildQuery(
                 settings,

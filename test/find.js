@@ -323,3 +323,34 @@ test('find with count', function(t){
         });
     });
 });
+
+test('find deep include but no nested data', function(t){
+
+    t.plan(1);
+
+    require('./db')(function(error, models){
+
+        var bob = models.user.create({
+                name: 'bob',
+                age: 50
+            });
+
+        var result = righto(models.user.findOne, {
+            where: {
+                age: 50
+            },
+            include: {
+                pets: {
+                    name: true,
+                    vet: {
+                        name: true
+                    }
+                }
+            }
+        }, righto.after(bob));
+
+        result(function(error, data){
+            t.notOk(error);
+        });
+    });
+});

@@ -28,11 +28,23 @@ module.exports = function(callback){
         }),
         account: sequelize.define('account', {
             name: DataTypes.STRING
+        }),
+        pet: sequelize.define('pet', {
+            name: DataTypes.STRING
+        }),
+        vet: sequelize.define('vet', {
+            name: DataTypes.STRING
         })
     };
 
     models.user.hasOne(models.account);
     models.account.belongsTo(models.user);
+
+    models.user.hasMany(models.pet);
+    models.pet.belongsTo(models.user);
+
+    models.pet.hasOne(models.vet);
+    models.vet.belongsTo(models.pet);
 
     sequelize.sync({force: true})
     .then(function(){
