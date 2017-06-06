@@ -32,7 +32,7 @@ function buildQuery(settings, where, include, model, throughModel, alias){
 
     if(include && include.$fields){
 
-        if(include.$fields = '*'){
+        if(include.$fields === '*'){
             include['*'] = true;
         }else{
             include.$fields.forEach(function(field){
