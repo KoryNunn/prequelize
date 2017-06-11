@@ -279,7 +279,7 @@ function findOne(settings, callback){
 
     var sequelizeResult = righto.from(prequelizeModel.model.findAll.bind(prequelizeModel.model), sequelizeSettings);
 
-    var result = righto(oneResultOrError, sequelizeResult, prequelizeModel);
+    var result = righto(oneResultOrError, sequelizeResult, prequelizeModel, settings);
 
     callback && result(callback);
 
@@ -530,11 +530,11 @@ function findManyAndUpdate(count, data, settings, callback){
         var matchedIds = matchedRows.get(function(matched){
                 if(matched.length > count){
                     console.error('Error. Model:', prequelizeModel.name, 'Update settings:', settings.where);
-                    throw new Error('Expected only ' + count + ' affected row/s, instead affected ' + affected);
+                    throw new Error('Expected only ' + count + ' affected row/s, instead affected ' + matched.length + 'on ');
                 }
 
                 if(matched.length < count){
-                    return righto.fail(new errors.Unprocessable('Expected ' + count + ' matched ' + matched));
+                    return righto.fail(new errors.Unprocessable('Expected ' + count + ' matched ' + matched.length));
                 }
 
                 return matched.map(function(item){
