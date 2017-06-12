@@ -17,7 +17,7 @@ module.exports = function(callback){
             underscored: false
         },
         logging: function (message) {
-            console.log('Sequelize: ', message);
+            // console.log('Sequelize: ', message);
         }
     });
 

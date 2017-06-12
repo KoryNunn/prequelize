@@ -52,7 +52,7 @@ test('findOneAndUpdate', function(t){
                 righto.after(bob)
             );
 
-        var updatedBob = righto(models.user.find, {
+        var updatedBob2 = righto(models.user.find, {
                 where: {
                     name: 'bob'
                 },
@@ -62,7 +62,7 @@ test('findOneAndUpdate', function(t){
                 }
             }, righto.after(updatedBob));
 
-        updatedBob(function(error, data){
+        updatedBob2(function(error, data){
             t.notOk(error);
 
             t.equal(data.age, 51);
@@ -123,7 +123,7 @@ test('findOneAndUpdateOrCreate', function(t){
                 }
             );
 
-        var updatedBob = righto(models.user.find, {
+        var updatedBob2 = righto(models.user.find, {
                 where: {
                     name: 'bob'
                 },
@@ -133,7 +133,7 @@ test('findOneAndUpdateOrCreate', function(t){
                 }
             }, righto.after(updatedBob));
 
-        updatedBob(function(error, data){
+        updatedBob2(function(error, data){
             t.notOk(error);
 
             t.equal(data.age, 51);
