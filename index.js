@@ -23,6 +23,7 @@ var parseSettings = require('./parseSettings'),
     errors = require('generic-errors'),
     merge = require('flat-merge'),
     extend = require('cyclic-deep-extend'),
+    util = require('util'),
     oneResultOrError = require('./oneResultOrError');
 
 function extendSettings(settings, extendedSettings){
@@ -279,7 +280,7 @@ function findOne(settings, callback){
 
     var sequelizeResult = righto.from(prequelizeModel.model.findAll.bind(prequelizeModel.model), sequelizeSettings);
 
-    var result = righto(oneResultOrError, sequelizeResult, prequelizeModel);
+    var result = righto(oneResultOrError, sequelizeResult, prequelizeModel, settings);
 
     callback && result(callback);
 
@@ -349,7 +350,7 @@ function findOneAndRemove(settings, callback){
             var affected = result[0];
 
             if(affected > 1){
-                console.error('Error. Model:', prequelizeModel.name, 'Update settings:', settings.where);
+                console.error('Error. Model:', prequelizeModel.name, 'Update settings:', util.inspect(settings, { showHidden: true, depth: 6 }));
                 throw new Error('Expected only 1 affected row, instead affected ' + affected);
             }
 
@@ -529,17 +530,17 @@ function findManyAndUpdate(count, data, settings, callback){
 
         var matchedIds = matchedRows.get(function(matched){
                 if(matched.length > count){
-                    console.error('Error. Model:', prequelizeModel.name, 'Update settings:', settings.where);
-                    throw new Error('Expected only ' + count + ' affected row/s, instead affected ' + affected);
+                    console.error('Error. Model:', prequelizeModel.name, 'Update settings:', util.inspect(settings, { showHidden: true, depth: 6 }));
+                    throw new Error('Expected only ' + count + ' affected row/s, instead affected ' + matched.length + 'on ');
                 }
 
                 if(matched.length < count){
-                    return righto.fail(new errors.Unprocessable('Expected ' + count + ' matched ' + matched));
+                    return righto.fail(new errors.Unprocessable('Expected ' + count + ' matched ' + matched.length));
                 }
 
                 return matched.map(function(item){
                     if(item.dataValues.id == null){
-                        console.error('Error. Model:', prequelizeModel.name, 'Update settings:', settings.where);
+                        console.error('Error. Model:', prequelizeModel.name, 'Update settings:', util.inspect(settings, { showHidden: true, depth: 6 }));
                         throw new Error('prequelize can\'t update tables without an ID.');
                     }
 
