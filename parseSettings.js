@@ -79,6 +79,9 @@ function buildQuery(settings, where, include, model, throughModel, alias){
 
         if(key !== '*' && include && !subModel && (include === true || include[key] || include['*'])){
             if(include && typeof include[key] === 'object' && '$fn' in include[key]){
+                if (result.attributes[0] === 'id') {
+                    result.attributes.shift();
+                }
                 result.attributes.push([parseFn(model.sequelize, key, include[key].$fn), key]);
             }else{
                 result.attributes.push(key);

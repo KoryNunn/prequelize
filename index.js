@@ -143,6 +143,29 @@ function checkArgs(settings, callback){
     };
 }
 
+function settingsOnlyMethod(method) {
+    return function(settings, callback) {
+        var prequelizeModel = this;
+
+        var checked = checkArgs(settings, callback);
+        settings = checked.settings;
+        callback = checked.callback;
+
+        settings = extendSettings(settings);
+
+        var sequelizeSettings = parseSettings(settings, prequelizeModel);
+
+        var sequelizeResult = righto.from(prequelizeModel.model[method].bind(prequelizeModel.model), sequelizeSettings);
+
+        var result = righto(format, sequelizeResult, prequelizeModel);
+
+        callback && result(callback);
+
+        return result;
+    };
+}
+
+
 /*
     ## Get.
 
@@ -718,6 +741,7 @@ function createModelMethods(model, modelName, settings) {
     prequelizeModel.findAndUpdate = findAndUpdate.bind(prequelizeModel);
     prequelizeModel.findOneAndUpdate = findOneAndUpdate.bind(prequelizeModel);
     prequelizeModel.findOneAndUpdateOrCreate = findOneAndUpdateOrCreate.bind(prequelizeModel);
+    prequelizeModel.count = settingsOnlyMethod('count').bind(prequelizeModel);
 
     return prequelizeModel;
 }
