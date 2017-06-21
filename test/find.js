@@ -324,6 +324,47 @@ test('find with count', function(t){
     });
 });
 
+test('find with count and group', function(t){
+    t.plan(2);
+
+    require('./db')(function(error, models){
+        var data = [
+                {
+                    name: 'bob',
+                    age: 50
+                },
+                {
+                    name: 'fred',
+                    age: 50
+                },
+                {
+                    name: 'bob',
+                    age: 40
+                }
+            ];
+
+        var users = righto(models.user.bulkCreate, data);
+
+        var group = righto(models.user.find,
+                {
+                    include: {
+                        name: true,
+                        count: {
+                            $fn: 'count(col("name"))'
+                        }
+                    },
+                    group: 'name'
+                },
+                righto.after(users)
+            );
+
+        group(function(error, data) {
+            t.notOk(error);
+            t.equal(data.count, 2);
+        });
+    });
+});
+
 test('find deep include but no nested data', function(t){
 
     t.plan(1);

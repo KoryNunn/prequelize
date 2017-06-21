@@ -6,6 +6,7 @@ mkdirp.sync('./dbs');
 require('./parseFn');
 
 require('./create');
+require('./count');
 require('./find');
 require('./update');
 
