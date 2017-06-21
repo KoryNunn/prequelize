@@ -233,6 +233,11 @@ Find one and Update or Create a record.
 
 findOneAndUpdateOrCreate(data, settings, callback)
 
+## Count.
+
+Count the number of results from a query.
+
+
 
 ## Querying through associations
 

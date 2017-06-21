@@ -363,7 +363,7 @@ function findOneAndRemove(settings, callback){
             if(error){
                 if(removeTransaction){
                     return abbott(removeTransaction.rollback())(function(){
-                        done(error, affected);
+                        done(error);
                     });
                 }
 
@@ -712,9 +712,17 @@ var defaultTransformProperty = {
     }
 };
 
+
+
+/*
+    ## Count.
+
+    Count the number of results from a query.
+*/
+var count = settingsOnlyMethod('count');
+
 function createModelMethods(model, modelName, settings) {
-    var modelSettings = settings.modelSettings && settings.modelSettings[modelName],
-        prequelizeModel = {
+    var prequelizeModel = {
             name: modelName,
             prequelizeSettings: settings,
             settings: {
@@ -741,7 +749,7 @@ function createModelMethods(model, modelName, settings) {
     prequelizeModel.findAndUpdate = findAndUpdate.bind(prequelizeModel);
     prequelizeModel.findOneAndUpdate = findOneAndUpdate.bind(prequelizeModel);
     prequelizeModel.findOneAndUpdateOrCreate = findOneAndUpdateOrCreate.bind(prequelizeModel);
-    prequelizeModel.count = settingsOnlyMethod('count').bind(prequelizeModel);
+    prequelizeModel.count = count.bind(prequelizeModel);
 
     return prequelizeModel;
 }
