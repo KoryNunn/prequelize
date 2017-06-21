@@ -22,7 +22,7 @@ function distinct(items){
     });
 }
 
-function buildQuery(settings, where, include, model, throughModel, alias){
+function buildQuery(settings, where, include, group, model, throughModel, alias){
 
     if(include === '*'){
         include = {
@@ -45,7 +45,7 @@ function buildQuery(settings, where, include, model, throughModel, alias){
 
     var result = {
             where: {},
-            attributes: ['id'],
+            attributes: group ? [] : ['id'],
             model: model,
             required: false
         },
@@ -56,6 +56,7 @@ function buildQuery(settings, where, include, model, throughModel, alias){
             settings,
             where[throughModel.name],
             include && include[throughModel.name],
+            group,
             throughModel,
             null,
             throughModel.isAliased ? throughModel.as : false
@@ -79,9 +80,6 @@ function buildQuery(settings, where, include, model, throughModel, alias){
 
         if(key !== '*' && include && !subModel && (include === true || include[key] || include['*'])){
             if(include && typeof include[key] === 'object' && '$fn' in include[key]){
-                if (result.attributes[0] === 'id') {
-                    result.attributes.shift();
-                }
                 result.attributes.push([parseFn(model.sequelize, key, include[key].$fn), key]);
             }else{
                 result.attributes.push(key);
@@ -98,6 +96,7 @@ function buildQuery(settings, where, include, model, throughModel, alias){
                 settings,
                 where && where[key],
                 include && include[key],
+                group,
                 subModel.target,
                 subModel.throughModel,
                 alias
@@ -111,7 +110,7 @@ function buildQuery(settings, where, include, model, throughModel, alias){
         result.include = includeKeys.map(function(key){
             return includeResult[key];
         });
-    };
+    }
 
     result.attributes = distinct(result.attributes);
 
@@ -123,6 +122,7 @@ function parseSettings(settings, prequelizeModel){
         prequelizeModel.settings,
         settings.where,
         settings.include,
+        settings.group,
         prequelizeModel.model
     );
 
