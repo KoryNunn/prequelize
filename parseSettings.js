@@ -1,5 +1,6 @@
 var getSubModel = require('./getSubModel');
 var parseFn = require('./parseFn');
+var invalidKeyRegex = /^\$/;
 
 function uniqueKeys(objects){
     return Object.keys(objects.reduce(function(result, object){
@@ -78,7 +79,7 @@ function buildQuery(settings, where, include, group, model, throughModel, alias)
             result.required = true;
         }
 
-        if(key !== '*' && include && !subModel && (include === true || include[key] || include['*'])){
+        if(key !== '*' && !invalidKeyRegex.test(key) && include && !subModel && (include === true || include[key] || include['*'])){
             if(include && typeof include[key] === 'object' && '$fn' in include[key]){
                 result.attributes.push([parseFn(model.sequelize, key, include[key].$fn), key]);
             }else{

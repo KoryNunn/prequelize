@@ -395,3 +395,52 @@ test('find deep include but no nested data', function(t){
         });
     });
 });
+
+test('find does not pass sequelize $ operators through to where but operator still works', function(t){
+    t.plan(2);
+
+    require('./db')(function(error, models){
+        var data = [
+            {
+                id: 1,
+                name: 'bob',
+                age: 50
+            },
+            {
+                id: 2,
+                name: 'jane',
+                age: 20
+            },
+            {
+                id: 3,
+                name: 'tmart'
+            }
+        ];
+
+        var expectedData = JSON.parse(JSON.stringify(data));
+            expectedData.pop();
+
+        var users = models.user.bulkCreate(data);
+
+        var foundBob = righto(models.user.findAll, {
+            where: {
+                $or: [
+                    {
+                        name: 'bob'
+                    },
+                    {
+                        name: 'jane'
+                    }
+                ]
+            },
+            include: {
+                $fields: ['name', 'age']
+            }
+        }, righto.after(users));
+
+        foundBob(function(error, data){
+            t.notOk(error);
+            t.deepEqual(data, expectedData);
+        });
+    });
+});
