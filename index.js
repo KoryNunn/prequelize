@@ -625,17 +625,19 @@ function findManyAndUpdate(count, data, settings, callback){
     If more than one result is found, the call will throw.
 */
 function findOneAndUpdate(data, settings, callback){
-    return findManyAndUpdate.call(this, 1, data, settings, function(error, result) {
-        if (error) {
+    var updateResult = findManyAndUpdate.call(this, 1, data, settings);
+
+    var result = righto.handle(updateResult, function(error, done) {
             if (error instanceof errors.Unprocessable) {
-                return callback(new errors.NotFound());
+                return done(new errors.NotFound());
             }
 
-            return callback(error);
-        }
+            return done(error);
+        });
 
-        callback(null, result);
-    });
+    callback && result(callback);
+
+    return result;
 }
 
 /*
@@ -688,15 +690,24 @@ function updateMany(ids, data, settings, callback){
 function findOneAndUpdateOrCreate(data, settings, callback){
     var prequelizeModel = this;
 
-    var found = righto(prequelizeModel.findOneAndUpdate, data, settings);
+    var found = prequelizeModel.findOneAndUpdate(data, settings);
 
-    var createHandle = righto.handle(found, function(error, done){
+    var findHandle = righto.handle(found, function(error, done){
             if(error instanceof errors.NotFound){
                 return prequelizeModel.create(data, settings, done);
             }
 
             done(error);
         });
+
+    var createHandle = righto.handle(findHandle, function(error, done){
+            if(error.name === 'SequelizeUniqueConstraintError'){
+                return prequelizeModel.findOneAndUpdate(data, settings, done);
+            }
+
+            done(error);
+        });
+
 
     callback && createHandle(callback);
 
