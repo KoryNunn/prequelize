@@ -326,7 +326,7 @@ test('find with count', function(t){
 });
 
 test('find with count and group', function(t){
-    t.plan(2);
+    t.plan(3);
 
     require('./db')(function(error, models){
         var data = [
@@ -349,19 +349,20 @@ test('find with count and group', function(t){
         var group = righto(models.user.findAll,
                 {
                     include: {
-                        age: true,
+                        name: true,
                         count: {
-                            $fn: 'count(col("age"))'
+                            $fn: 'count(col("name"))'
                         }
                     },
-                    group: ['age']
+                    group: 'age'
                 },
                 righto.after(users)
             );
 
         group(function(error, data) {
             t.notOk(error);
-            t.equal(data.length, 2);
+            t.equal(data[0].count, 1);
+            t.equal(data[1].count, 2);
         });
     });
 });

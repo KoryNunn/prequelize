@@ -38,7 +38,8 @@ module.exports = function(callback){
             name: DataTypes.STRING
         }),
         pet: sequelize.define('pet', {
-            name: DataTypes.STRING
+            name: DataTypes.STRING,
+            age: DataTypes.INTEGER(3)
         }),
         vet: sequelize.define('vet', {
             name: DataTypes.STRING
