@@ -168,20 +168,21 @@ test('findOne throw', function(t){
     t.plan(1);
 
     require('./db')(function(error, models){
-
         var bob = models.user.create({
             name: 'bob',
             age: 50
         });
 
         var bob2 = models.user.create({
-            name: 'bob',
+            name: 'bob2',
             age: 50
         });
 
         var foundBob = righto(models.user.findOne, {
             where: {
-                name: 'bob'
+                name: {
+                    $like: '%bob%'
+                }
             }
         }, righto.after(bob, bob2));
 
@@ -338,29 +339,29 @@ test('find with count and group', function(t){
                     age: 50
                 },
                 {
-                    name: 'bob',
+                    name: 'bob2',
                     age: 40
                 }
             ];
 
         var users = righto(models.user.bulkCreate, data);
 
-        var group = righto(models.user.find,
+        var group = righto(models.user.findAll,
                 {
                     include: {
-                        name: true,
+                        age: true,
                         count: {
-                            $fn: 'count(col("name"))'
+                            $fn: 'count(col("age"))'
                         }
                     },
-                    group: 'name'
+                    group: ['age']
                 },
                 righto.after(users)
             );
 
         group(function(error, data) {
             t.notOk(error);
-            t.equal(data.count, 2);
+            t.equal(data.length, 2);
         });
     });
 });

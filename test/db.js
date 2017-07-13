@@ -25,6 +25,14 @@ module.exports = function(callback){
         user: sequelize.define('user', {
             name: DataTypes.STRING,
             age: DataTypes.INTEGER(3)
+        },
+        {
+            indexes: [
+                {
+                    unique: true,
+                    fields: ['name']
+                }
+            ]
         }),
         account: sequelize.define('account', {
             name: DataTypes.STRING

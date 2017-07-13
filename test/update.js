@@ -82,7 +82,7 @@ test('findOneAndUpdate throw', function(t){
             });
 
         var bob2 = models.user.create({
-                name: 'bob',
+                name: 'bob2',
                 age: 50
             });
 
@@ -92,7 +92,9 @@ test('findOneAndUpdate throw', function(t){
                 },
                 {
                     where: {
-                        name: 'bob'
+                        name: {
+                            $like: '%bob%'
+                        }
                     }
                 },
                 righto.after(bob, bob2)
@@ -137,6 +139,53 @@ test('findOneAndUpdateOrCreate', function(t){
             t.notOk(error);
 
             t.equal(data.age, 51);
+        });
+    });
+});
+
+test('findOneAndUpdateOrCreate race', function(t){
+    t.plan(2);
+
+    require('./db')(function(error, models){
+
+        var updatedBob = righto(models.user.findOneAndUpdateOrCreate,
+                {
+                    name: 'bob',
+                    age: 51
+                },
+                {
+                    where: {
+                        name: 'bob'
+                    }
+                }
+            );
+
+        var updatedBob2 = righto(models.user.findOneAndUpdateOrCreate,
+                {
+                    name: 'bob',
+                    age: 52
+                },
+                {
+                    where: {
+                        name: 'bob'
+                    }
+                }
+            );
+
+        var results = righto(models.user.findAll, {
+                where: {
+                    name: 'bob'
+                },
+                include: {
+                    name: true,
+                    age: true
+                }
+            }, righto.after(updatedBob, updatedBob2));
+
+        results(function(error, results){
+            t.notOk(error);
+
+            t.equal(results.length, 1);
         });
     });
 });
