@@ -46,7 +46,7 @@ function buildQuery(settings, where, include, group, model, throughModel, alias)
 
     var result = {
             where: {},
-            attributes: group ? [] : ['id'],
+            attributes: group ? [] : [model.primaryKeyField],
             model: model,
             required: false
         },

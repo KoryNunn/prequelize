@@ -9,6 +9,7 @@ require('./create');
 require('./count');
 require('./find');
 require('./update');
+require('./primaryKey');
 
 process.on('beforeExit', function(){
     rimraf.sync('./dbs');

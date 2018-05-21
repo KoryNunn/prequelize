@@ -43,6 +43,16 @@ module.exports = function(callback){
         }),
         vet: sequelize.define('vet', {
             name: DataTypes.STRING
+        }),
+        potato: sequelize.define('potato', {
+            type: {
+                type: Sequelize.STRING,
+                primaryKey: true,
+                autoIncrement: false
+            },
+            description: {
+                type: Sequelize.STRING
+            }
         })
     };
 
