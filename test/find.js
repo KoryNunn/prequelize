@@ -34,6 +34,39 @@ test('find', function(t){
     });
 });
 
+test('find $fields: ["name"] without an id', function(t){
+
+    t.plan(3);
+
+    require('./db')(function(error, models){
+
+        var bobData = {
+            name: 'bob',
+            age: 50
+        };
+
+        var bob = models.user.create(bobData);
+
+        var foundBob = righto(models.user.find, {
+            where: {
+                name: 'bob'
+            },
+            include: {
+                $fields: ['name']
+            },
+            excludePrimaryKey: true
+        }, righto.after(bob));
+
+        foundBob(function(error, data){
+            t.notOk(error);
+            t.notOk(data.id);
+            delete data.createdAt;
+            delete data.updatedAt;
+            t.deepEqual(data, {name: bobData.name});
+        });
+    });
+});
+
 test('find $fields: ["*"]', function(t){
 
     t.plan(2);
