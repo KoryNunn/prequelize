@@ -23,7 +23,7 @@ function distinct(items){
     });
 }
 
-function buildQuery(settings, where, include, group, model, throughModel, alias){
+function buildQuery(settings, excludePrimaryKey, where, include, group, model, throughModel, alias){
 
     if(include === '*'){
         include = {
@@ -46,7 +46,7 @@ function buildQuery(settings, where, include, group, model, throughModel, alias)
 
     var result = {
             where: {},
-            attributes: group ? [] : [model.primaryKeyField],
+            attributes: group || excludePrimaryKey ? [] : [model.primaryKeyField],
             model: model,
             required: false
         },
@@ -55,6 +55,7 @@ function buildQuery(settings, where, include, group, model, throughModel, alias)
     if(where && throughModel && throughModel.name in where){
         result.through = buildQuery(
             settings,
+            excludePrimaryKey,
             where[throughModel.name],
             include && include[throughModel.name],
             group,
@@ -95,6 +96,7 @@ function buildQuery(settings, where, include, group, model, throughModel, alias)
 
             includeResult[key] = buildQuery(
                 settings,
+                excludePrimaryKey,
                 where && where[key],
                 include && include[key],
                 group,
@@ -121,6 +123,7 @@ function buildQuery(settings, where, include, group, model, throughModel, alias)
 function parseSettings(settings, prequelizeModel){
     var sequelizeSettings = buildQuery(
         prequelizeModel.settings,
+        settings.excludePrimaryKey,
         settings.where,
         settings.include,
         settings.group,
