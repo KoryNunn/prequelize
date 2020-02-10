@@ -50,7 +50,15 @@ function buildQuery(settings, excludePrimaryKey, where, include, group, model, t
             model: model,
             required: false
         },
-        keys = uniqueKeys([where, include, model.tableAttributes]);
+        keys = uniqueKeys([where, include, model.tableAttributes]),
+        whereIsObject = typeof where === 'object';
+
+    if (whereIsObject) {
+        // new sequelize operators are symbols so they must be iterated over and copied separately from the enumerable properties
+        Object.getOwnPropertySymbols(where).forEach(function(symbol) {
+            result.where[symbol] = where[symbol];
+        });
+    }
 
     if(where && throughModel && throughModel.name in where){
         result.through = buildQuery(
@@ -75,7 +83,7 @@ function buildQuery(settings, excludePrimaryKey, where, include, group, model, t
     keys.forEach(function(key){
         var subModel = getSubModel(key, model);
 
-        if(typeof where === 'object' && key in where && !subModel){
+        if(whereIsObject && key in where && !subModel){
             result.where[key] = settings.transformProperty.to(where[key], model, key);
             result.required = true;
         }

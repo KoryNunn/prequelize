@@ -16,8 +16,8 @@
   "devDependencies": {
     "mkdirp": "^0.5.1",
     "rimraf": "^2.6.1",
-    "sequelize": "^4.1.0",
-    "sqlite3": "^3.1.8"
+    "sequelize": "^5.21.4",
+    "sqlite3": "^4.1.1"
   },
   "scripts": {
     "test": "node test",
