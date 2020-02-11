@@ -338,40 +338,6 @@ test('find with relation and operator', function(t){
     });
 });
 
-test.only('find with count', function(t){
-
-    t.plan(2);
-
-    require('./db')(function(error, models){
-
-        var bob = models.user.create({
-                name: 'bob',
-                age: 50
-            });
-
-        var jen = models.user.create({
-                name: 'jen',
-                age: 25
-            });
-
-        var count = righto(models.user.find, {
-            where: {
-                age: {
-                    [Op.gte]: 50
-                }
-            },
-            include: {
-                name: true
-            }
-        }, righto.after(bob, jen));
-
-        count(function(error, data){
-            t.notOk(error);
-            t.equal(data.count, 2);
-        });
-    });
-});
-
 test('find with relation include *', function(t){
 
     t.plan(2);
