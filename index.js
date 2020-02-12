@@ -221,7 +221,7 @@ function find(settings, callback){
 
     var sequelizeSettings = parseSettings(settings, prequelizeModel);
 
-    var sequelizeResult = righto.from(prequelizeModel.model.find.bind(prequelizeModel.model), sequelizeSettings);
+    var sequelizeResult = righto.from(prequelizeModel.model.findOne.bind(prequelizeModel.model), sequelizeSettings);
 
     var result = righto(format, sequelizeResult, prequelizeModel);
 

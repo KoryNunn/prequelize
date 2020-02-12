@@ -1,5 +1,6 @@
 var test = require('tape');
 var righto = require('righto');
+var { Op } = require('sequelize');
 var nextError = require('./nextError');
 
 test('find', function(t){
@@ -214,7 +215,7 @@ test('findOne throw', function(t){
         var foundBob = righto(models.user.findOne, {
             where: {
                 name: {
-                    $like: '%bob%'
+                    [Op.like]: '%bob%'
                 }
             }
         }, righto.after(bob, bob2));
@@ -268,6 +269,69 @@ test('find with relation', function(t){
                 age: 50,
                 account:{
                     name: 'bobington2000'
+                }
+            });
+        });
+    });
+});
+
+test('find with relation and operator', function(t){
+
+    t.plan(2);
+
+    require('./db')(function(error, models){
+
+        var bob = models.user.create({
+                name: 'bob',
+                age: 50
+            });
+        var jen = models.user.create({
+                name: 'jen',
+                age: 50
+            });
+
+        var bobsAccount = righto(models.account.create, righto.resolve({
+                userId: bob.get('id'),
+                name: 'bobington2000'
+            }));
+
+        var jensAccount = righto(models.account.create, righto.resolve({
+                userId: jen.get('id'),
+                name: 'jenny1000'
+            }));
+
+        var foundBob = righto(models.account.findOne, {
+            where: {
+                user: {
+                    [Op.and]: [
+                        {
+                            age: {
+                                [Op.gte]: 50
+                            }
+                        },
+                        {
+                            name: {
+                                [Op.like]: '%bob%'
+                            }
+                        }
+                    ]
+                }
+            },
+            include: {
+                user: {
+                    name: true
+                }
+            }
+        }, righto.after(bobsAccount, jensAccount));
+
+        foundBob(function(error, data){
+            t.notOk(error);
+
+            delete data.id;
+            delete data.user.id;
+            t.deepEqual(data, {
+                user: {
+                    name: 'bob'
                 }
             });
         });
@@ -341,7 +405,7 @@ test('find with count', function(t){
         var count = righto(models.user.find, {
             where: {
                 age: {
-                    $gte: 10
+                    [Op.gte]: 10
                 }
             },
             include: {
@@ -459,7 +523,7 @@ test('find does not pass sequelize $ operators through to where but operator sti
 
         var foundBob = righto(models.user.findAll, {
             where: {
-                $or: [
+                [Op.or]: [
                     {
                         name: 'bob'
                     },

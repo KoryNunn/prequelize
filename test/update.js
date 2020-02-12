@@ -1,5 +1,6 @@
 var test = require('tape');
 var righto = require('righto');
+var { Op } = require('sequelize');
 var nextError = require('./nextError');
 
 test('update', function(t){
@@ -93,7 +94,7 @@ test('findOneAndUpdate throw', function(t){
                 {
                     where: {
                         name: {
-                            $like: '%bob%'
+                            [Op.like]: '%bob%'
                         }
                     }
                 },
