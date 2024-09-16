@@ -11,7 +11,7 @@
     "grepjs": "^1.0.0",
     "object-tojson": "^1.0.1",
     "righto": "^3.0.0",
-    "tape": "^4.6.3"
+    "tape": "^4.15.1"
   },
   "devDependencies": {
     "mkdirp": "^0.5.1",
